@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta content="#f3f4f6" name="theme-color">
+    <title>Sign in | Examroom</title>
+    <link href="/assets/app.css" rel="stylesheet">
+    <script src="/assets/login.js" type="module"></script>
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <section aria-labelledby="login-title" class="form-panel">
+        <a class="wordmark login-brand" href="/login.html"><span aria-hidden="true" class="wordmark-icon">E</span><span>Examroom</span></a>
+        <div class="form-content">
+          <h1 id="login-title">Sign in</h1>
+          <p class="form-intro">Enter your account details to access the examination system.</p>
+          <div class="notice error-notice" hidden id="login-error" role="alert"></div>
+          <form id="login-form" novalidate="">
+            <div class="field">
+              <label for="username">Username</label>
+              <input autocapitalize="none" autocomplete="username" id="username" maxlength="80" name="username" placeholder="Enter your username" required spellcheck="false" type="text">
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <div class="password-wrap"><input autocomplete="current-password" id="password" name="password" placeholder="Enter your password" required type="password"><button aria-label="Show password" aria-pressed="false" class="text-button" id="toggle-password" type="button">Show</button></div>
+            </div>
+            <button class="primary-button" id="sign-in" type="submit"><span>Sign in</span></button>
+          </form>
+          <p class="help-copy">For account access or password assistance, contact your instructor or exam coordinator.</p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "exam_id": 3,
+  "verified_base_url": "http://127.0.0.1:8080",
+  "timezone": "Asia/Calcutta",
+  "checks": [
+    "Local instructor UI: published, 30 questions, 4 options each, 10 minutes and exact Asia/Calcutta opening/closing times",
+    "Local student catalog: exact schedule, counts, marks and correct availability; no answer key; no test attempt created"
+  ],
+  "availability_at_check": "OPEN",
+  "student_attempt_created": false,
+  "page_errors": 0,
+  "result": "PASS"
+}

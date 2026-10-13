@@ -1,0 +1,191 @@
+[
+  {
+    "file": "e2e/playwright.config.js",
+    "before_lines": 60,
+    "after_lines": 64,
+    "sha256": "fb597ada2b53f7a3c7c592acaaf396096c380935e287f05155b0c01bcb14f565"
+  },
+  {
+    "file": "src/main/java/com/onlineexam/repository/QuestionOptionRepository.java",
+    "before_lines": 54,
+    "after_lines": 67,
+    "sha256": "faa6fd6be848aeba7e7a482969fc77f8c8ae61def7c8dd9df75c24c5fb82e2be"
+  },
+  {
+    "file": "src/main/java/com/onlineexam/repository/QuestionRepository.java",
+    "before_lines": 51,
+    "after_lines": 73,
+    "sha256": "d150f2d1e9c1055cfb320176e0075d8d49334bd893669bb8d575b0e272ba35dc"
+  },
+  {
+    "file": "src/main/java/com/onlineexam/service/AnswerService.java",
+    "before_lines": 93,
+    "after_lines": 93,
+    "sha256": "0433407decb0b4afc6dec45bcb0b34228339bc473929d0fef1f70045ccb8815f"
+  },
+  {
+    "file": "src/main/java/com/onlineexam/service/AttemptService.java",
+    "before_lines": 99,
+    "after_lines": 102,
+    "sha256": "bead0c30b18aa58987c0566a7d592bec851498364f11a26ddf5f3a1489e38b31"
+  },
+  {
+    "file": "src/main/java/com/onlineexam/service/ExamAuthoringService.java",
+    "before_lines": 189,
+    "after_lines": 191,
+    "sha256": "b9aad70ee7259703f50d1e5ad826f556748090e3ae79ed8dad7a03a20d18961a"
+  },
+  {
+    "file": "src/main/java/com/onlineexam/service/ExamPublicationService.java",
+    "before_lines": 98,
+    "after_lines": 100,
+    "sha256": "3f2759fe3e4b9d9ef7fbe7a8411bbfb437125c56efbdc79d93d73d4a4fc759ff"
+  },
+  {
+    "file": "src/main/java/com/onlineexam/service/FinalizationService.java",
+    "before_lines": 87,
+    "after_lines": 85,
+    "sha256": "1d979126fcd32f48ab4ad710df22d4237cf5e3264f52e421d806ec2b1a8293e4"
+  },
+  {
+    "file": "src/main/java/com/onlineexam/service/GradingService.java",
+    "before_lines": 67,
+    "after_lines": 67,
+    "sha256": "6166dd1bbe33003de1575043e7fec65c470c4e845598161ee99f8ddfb0933be3"
+  },
+  {
+    "file": "src/main/java/com/onlineexam/service/StudentExamCatalogService.java",
+    "before_lines": 58,
+    "after_lines": 59,
+    "sha256": "3eb67804affccd5d106af3d525217042716daadf510291b66935d5087741007c"
+  },
+  {
+    "file": "src/main/resources/static/assets/app.css",
+    "before_lines": 28,
+    "after_lines": 1522,
+    "sha256": "acc5dea3b8537271cc91c7d8dcd1133a49ec0958797305e7e7a5006dcf587f73"
+  },
+  {
+    "file": "src/main/resources/static/assets/exam.js",
+    "before_lines": 490,
+    "after_lines": 423,
+    "sha256": "81f40a21028b1b5bc117e4fc5e107392adfc60772d876a69c06b0bf21e7060d5"
+  },
+  {
+    "file": "src/main/resources/static/assets/instructor.js",
+    "before_lines": 472,
+    "after_lines": 472,
+    "sha256": "9c983380f24e2920925edff3e784e491ba92e7ddc1c7dc3ab27b4ad1a2480561"
+  },
+  {
+    "file": "src/main/resources/static/assets/student.js",
+    "before_lines": 168,
+    "after_lines": 162,
+    "sha256": "07ed84ee6d87b4d7d14477be8648873163cca98d4e7a8e49d966e2b7ca2f7f3b"
+  },
+  {
+    "file": "src/main/resources/static/exam.html",
+    "before_lines": 43,
+    "after_lines": 82,
+    "sha256": "065df6b7b245e76543be5fc05280e45779e2ab3687396b807aec6da12c256b08"
+  },
+  {
+    "file": "src/main/resources/static/home.html",
+    "before_lines": 38,
+    "after_lines": 42,
+    "sha256": "4ffa22afe2ea378029ea4d93c5ea73eb15630520e069cc829cbb28884fad35eb"
+  },
+  {
+    "file": "src/main/resources/static/index.html",
+    "before_lines": 12,
+    "after_lines": 12,
+    "sha256": "01318bbda25ffdba5fa0168114e14ab72dec91431a4ccdc393aa661a2dc15241"
+  },
+  {
+    "file": "src/main/resources/static/instructor.html",
+    "before_lines": 80,
+    "after_lines": 142,
+    "sha256": "4408087bbb25c0e66b9447b5ddc3ddcb3aa18c6853dfa509c676e8872c873b0e"
+  },
+  {
+    "file": "src/main/resources/static/login.html",
+    "before_lines": 32,
+    "after_lines": 35,
+    "sha256": "56fb624bef8ae0e091929041f02d70e9ca168e4d19ccecc3977dc1c9aa87e428"
+  },
+  {
+    "file": "src/main/resources/static/student.html",
+    "before_lines": 42,
+    "after_lines": 72,
+    "sha256": "a2f52ce335a416580003991272f3c3a4bbe7017cc71ef02a926e4d7c3419c6a8"
+  },
+  {
+    "file": "src/test/java/com/onlineexam/RepositoryIT.java",
+    "before_lines": 205,
+    "after_lines": 236,
+    "sha256": "3db74919d0dccce2bd3c72413bdd4eb517bfa86dd0459a1009a9721bb3e8d085"
+  },
+  {
+    "file": "tools/check_dashboard_layouts.py",
+    "before_lines": 109,
+    "after_lines": 96,
+    "sha256": "ea668739ec995a301e4bd1d7d9b0555bcc03765462456e7d60983cb0b664c48a"
+  },
+  {
+    "file": "tools/check_keyboard_offline_ui.py",
+    "before_lines": 135,
+    "after_lines": 135,
+    "sha256": "a3f2f32284b1525e62173b8080d55654990fd1305e2667397c68eeb48a582c0a"
+  },
+  {
+    "file": "tools/check_resilience_browser.py",
+    "before_lines": 143,
+    "after_lines": 140,
+    "sha256": "e4c58645bf7b966d70d2ee330d54bd7cae0bfe3a38f158f609553bc3ab0c2681"
+  },
+  {
+    "file": "tools/check_restart_recovery.ps1",
+    "before_lines": 57,
+    "after_lines": 70,
+    "sha256": "3169704ef6fd3ba99b8a6d87ca41c6c510f77ff9e6ad955722edbcf65725904f"
+  },
+  {
+    "file": "tools/check_restart_recovery.py",
+    "before_lines": 132,
+    "after_lines": 139,
+    "sha256": "11e24cfd21985965733f4806cd9c73a466cb916b009c1d15dd90f5da01ce875b"
+  },
+  {
+    "file": "tools/check_safe_text_ui.py",
+    "before_lines": 117,
+    "after_lines": 117,
+    "sha256": "bd74075ec43f0e11393adeb90e84fa7d41fac33e97c3e43ae7b05cc2af122c4e"
+  },
+  {
+    "file": "tools/rehearse_clean_setup_backup.py",
+    "before_lines": 165,
+    "after_lines": 172,
+    "sha256": "c656c42565447a3d95f936888e3d2b413d60f8fd2143630f963ef1f833399b57"
+  },
+  {
+    "file": "tools/run_dashboard_checks.py",
+    "before_lines": 108,
+    "after_lines": 87,
+    "sha256": "2b13a9efd20c02b6fa27f96fb71ed7df6788449463640190a80cfe6f74be14d3"
+  },
+  {
+    "file": "tools/browser_support.py",
+    "after_lines": 25,
+    "sha256": "66e1f428da727c6631467bf8df13e19dbc284d99835c64908c805f917cd24742"
+  },
+  {
+    "file": "docs/CODE_REVIEW.md",
+    "after_lines": 29,
+    "sha256": "0cd0075b889d7710673a2cd7e27548ca5677a5501cf59563dfd4285666050949"
+  },
+  {
+    "file": "README.md",
+    "after_lines": 80,
+    "sha256": "5088c94bf3c31118e6acb69daf15dba9b1c848100deab830cfdcf36a42ed5e6f"
+  }
+]

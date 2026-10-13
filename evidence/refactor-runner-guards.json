@@ -1,0 +1,22 @@
+[
+  {
+    "check": "browser config rejects live schema",
+    "expected_rejection": true,
+    "exit_code": 1
+  },
+  {
+    "check": "browser config rejects invalid port",
+    "expected_rejection": true,
+    "exit_code": 1
+  },
+  {
+    "check": "shared browser settings reject live schema",
+    "expected_rejection": true,
+    "exit_code": 1
+  },
+  {
+    "check": "clean setup rejects occupied port",
+    "expected_rejection": true,
+    "exit_code": 1
+  }
+]

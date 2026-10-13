@@ -1,0 +1,11 @@
+P02-03 runtime profile check, 2026-09-29, local MySQL 8.4.11
+
+1. Packaged Java 21 application started with no active profile and --spring.main.web-application-type=none. Exit 0; Flyway V1 applied to online_exam. Read-only container query for the five reserved demo usernames returned 0 accounts, 0 instructors, 0 students, 0 bcrypt hashes.
+2. First demo attempt did not seed accounts because the local PowerShell runtime lacks static RandomNumberGenerator.GetBytes. Replaced that test setup call with a supported RandomNumberGenerator instance and generated a private 24-byte password. The application did not fail a code invariant.
+3. Packaged app started with --spring.profiles.active=demo and a private DEMO_PASSWORD. Exit 0. The same read-only query returned 5 accounts, 2 instructors, 3 students and 5 bcrypt-tagged hashes. Password stored only in ignored .local/demo-password.txt.
+4. Packaged app started with --spring.profiles.active=provision, no web server, and private provisioning environment variables. Exit 0 and reported local_student1 (STUDENT). Read-only MySQL query returned local_student1, STUDENT, {bcrypt} prefix. Password stored only in ignored .local/local-student-password.txt.
+5. AccountProvisioningIT ran two real-MySQL cases with rollback: demo seed/idempotency/encoded passwords and local account normalization/duplicate/length rules. The Maven profile ran 5 unit/HTTP and 8 MySQL integration tests, no failures/errors/skips.
+6. The normal profile was started separately against disposable online_exam_e2e. Exit 0; Flyway V1 applied. Its reserved demo account query returned 0, 0, 0, 0 while the explicit demo schema held 5, 2, 3, 5. This completed the isolated-database profile comparison.
+7. Re-running the documented provision profile for local_student1 exited 1 with `Username is already in use`. Attempting PROVISION_ROLE=ADMIN exited 1 with `PROVISION_ROLE must be STUDENT or INSTRUCTOR`. The subsequent database query still found only local_student1 as STUDENT with a `{bcrypt}` prefix, and no invalid_role_student row.
+
+Supporting logs: V0013-default-profile.log, V0013-default-isolated.log, V0013-default-isolated-count.txt, V0013-demo-profile.log, V0013-demo-count.txt, V0013-provision-profile.log, V0013-local-account.txt, V0013-provision-duplicate.log, V0013-provision-role.log, V0013-provision-rejections.txt, V0013-mysql-it.log.

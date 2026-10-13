@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: online-exam
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/online_exam?connectionTimeZone=UTC}
+    username: ${DB_USER:online_exam}
+    password: ${DB_PASSWORD:}
+  flyway:
+    enabled: true
+  sql:
+    init:
+      mode: never
+server:
+  port: ${PORT:8080}
+  servlet:
+    session:
+      timeout: 15m
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${COOKIE_SECURE:false}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never

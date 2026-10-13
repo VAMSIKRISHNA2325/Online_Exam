@@ -1,0 +1,47 @@
+{
+  "public_url": "https://graveness-undrafted-harsh.ngrok-free.dev",
+  "upstream": "http://127.0.0.1:8080",
+  "ngrok_pid": 24044,
+  "traffic_inspection": false,
+  "requests": [
+    {
+      "path": "/api/ready",
+      "status": 200,
+      "expected": 200,
+      "readiness": "UP"
+    },
+    {
+      "path": "/login.html",
+      "status": 200,
+      "expected": 200,
+      "login_page": "Examroom dashboard login served"
+    },
+    {
+      "path": "/assets/app.css",
+      "status": 200,
+      "expected": 200,
+      "stylesheet": "Matches current dashboard source"
+    },
+    {
+      "path": "/api/me",
+      "status": 401,
+      "expected": 401
+    },
+    {
+      "path": "/api/student/exams",
+      "status": 401,
+      "expected": 401
+    },
+    {
+      "path": "/api/instructor/exams",
+      "status": 401,
+      "expected": 401
+    },
+    {
+      "path": "/api/instructor/exams/1/results",
+      "status": 401,
+      "expected": 401
+    }
+  ],
+  "result": "PASS"
+}

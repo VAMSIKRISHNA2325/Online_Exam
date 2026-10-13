@@ -1,0 +1,24 @@
+{
+  "ready": true,
+  "served_assets_match_source": [
+    "exam.html",
+    "assets/app.css",
+    "assets/exam.js",
+    "assets/student.js",
+    "assets/instructor.js"
+  ],
+  "local_teacher_student_login_logout": true,
+  "protected_api_denies_anonymous_and_student": true,
+  "uiux_exam": {
+    "question_count": 30,
+    "options_per_question": 4,
+    "duration_minutes": 10,
+    "opens_at": "2026-10-09T20:00:00Z",
+    "closes_at": "2026-10-09T20:30:00Z",
+    "status": "PUBLISHED",
+    "catalog_maximum_marks": 30,
+    "catalog_availability": "CLOSED"
+  },
+  "exam_result_count": 2,
+  "attempts_created": 0
+}

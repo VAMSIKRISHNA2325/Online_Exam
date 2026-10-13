@@ -1,0 +1,3435 @@
+--- before/e2e/playwright.config.js
++++ after/e2e/playwright.config.js
+@@ -17,7 +17,8 @@
+ const databasePassword = process.env.DB_PASSWORD || settings.MYSQL_PASSWORD || '';
+ const databaseUrl = process.env.E2E_DB_URL ||
+   'jdbc:mysql://127.0.0.1:3307/online_exam_e2e?connectionTimeZone=UTC';
+-if (!databaseUrl.includes('online_exam_e2e') || !databasePassword || !demoPassword) {
++if (!databaseUrl.startsWith('jdbc:mysql://') || new URL(databaseUrl.slice(5)).pathname !== '/online_exam_e2e'
++    || !databasePassword || !demoPassword) {
+   throw new Error('Isolated online_exam_e2e database and private credentials are required');
+ }
+ const localJava = path.join(root, '.local', 'jdk', 'jdk-21.0.12.1+1', 'bin',
+@@ -27,6 +28,9 @@
+   : (fs.existsSync(localJava) ? localJava : 'java');
+ const jar = path.join(root, 'target', 'online-exam-0.1.0-SNAPSHOT.jar');
+ if (!fs.existsSync(jar)) throw new Error('Build the packaged application before Playwright');
++const port = Number(process.env.E2E_PORT || 8080);
++if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid E2E_PORT');
++const baseURL = `http://127.0.0.1:${port}`;
+ 
+ module.exports = defineConfig({
+   testDir: './tests',
+@@ -37,14 +41,14 @@
+   reporter: [['list'], ['html', { open: 'never' }]],
+   outputDir: 'test-results',
+   use: {
+-    baseURL: 'http://127.0.0.1:8080',
++    baseURL,
+     browserName: 'chromium',
+     trace: 'retain-on-failure',
+     screenshot: 'only-on-failure'
+   },
+   webServer: {
+-    command: `"${java}" -jar "${jar}" --spring.profiles.active=demo`,
+-    url: 'http://127.0.0.1:8080/api/ready',
++    command: `"${java}" -jar "${jar}" --spring.profiles.active=demo --server.address=127.0.0.1`,
++    url: `${baseURL}/api/ready`,
+     timeout: 90_000,
+     reuseExistingServer: false,
+     env: {
+@@ -53,7 +57,7 @@
+       DB_USER: process.env.E2E_DB_USER || 'online_exam',
+       DB_PASSWORD: databasePassword,
+       DEMO_PASSWORD: demoPassword,
+-      PORT: '8080',
++      PORT: String(port),
+       DEBUG: 'false'
+     }
+   }
+--- before/src/main/java/com/onlineexam/repository/QuestionOptionRepository.java
++++ after/src/main/java/com/onlineexam/repository/QuestionOptionRepository.java
+@@ -3,7 +3,10 @@
+ import com.onlineexam.domain.QuestionOption;
+ import java.sql.ResultSet;
+ import java.sql.SQLException;
++import java.util.ArrayList;
++import java.util.HashMap;
+ import java.util.List;
++import java.util.Map;
+ import java.util.Optional;
+ import org.springframework.jdbc.core.JdbcTemplate;
+ import org.springframework.jdbc.core.RowMapper;
+@@ -36,6 +39,16 @@
+                         + "WHERE question_id = ? ORDER BY display_order, id", MAPPER, questionId);
+     }
+ 
++    public Map<Long, List<QuestionOption>> findByExam(long examId) {
++        Map<Long, List<QuestionOption>> choices = new HashMap<>();
++        jdbc.query("SELECT o.id, o.question_id, o.option_text, o.is_correct, o.display_order "
++                        + "FROM question_options o JOIN questions q ON q.id = o.question_id "
++                        + "WHERE q.exam_id = ? ORDER BY q.display_order, q.id, o.display_order, o.id",
++                MAPPER, examId).forEach(option -> choices
++                        .computeIfAbsent(option.questionId(), id -> new ArrayList<>()).add(option));
++        return choices;
++    }
++
+     public int update(QuestionOption option) {
+         return jdbc.update("UPDATE question_options SET option_text = ?, is_correct = ?, "
+                         + "display_order = ? WHERE id = ?",
+--- before/src/main/java/com/onlineexam/repository/QuestionRepository.java
++++ after/src/main/java/com/onlineexam/repository/QuestionRepository.java
+@@ -3,7 +3,9 @@
+ import com.onlineexam.domain.Question;
+ import java.sql.ResultSet;
+ import java.sql.SQLException;
++import java.util.HashMap;
+ import java.util.List;
++import java.util.Map;
+ import java.util.Optional;
+ import org.springframework.jdbc.core.JdbcTemplate;
+ import org.springframework.jdbc.core.RowMapper;
+@@ -35,6 +37,26 @@
+                 MAPPER, examId);
+     }
+ 
++    public Map<Long, Stats> statsByExam() {
++        Map<Long, Stats> stats = new HashMap<>();
++        jdbc.query("SELECT exam_id, COUNT(*) AS question_count, SUM(marks) AS total_marks "
++                        + "FROM questions GROUP BY exam_id",
++                rows -> {
++                    stats.put(rows.getLong("exam_id"), new Stats(
++                            Math.toIntExact(rows.getLong("question_count")), rows.getLong("total_marks")));
++                });
++        return stats;
++    }
++
++    public record Stats(int count, long marks) {}
++
++    public Stats stats(long examId) {
++        return jdbc.queryForObject("SELECT COUNT(*) AS question_count, "
++                        + "COALESCE(SUM(marks), 0) AS total_marks FROM questions WHERE exam_id = ?",
++                (rows, number) -> new Stats(Math.toIntExact(rows.getLong("question_count")),
++                        rows.getLong("total_marks")), examId);
++    }
++
+     public int update(Question question) {
+         return jdbc.update("UPDATE questions SET question_text = ?, marks = ?, display_order = ? WHERE id = ?",
+                 question.text(), question.marks(), question.displayOrder(), question.id());
+--- before/src/main/java/com/onlineexam/service/AnswerService.java
++++ after/src/main/java/com/onlineexam/service/AnswerService.java
+@@ -64,12 +64,12 @@
+         }
+ 
+         Answer current = answers.find(attemptId, questionId).orElse(null);
+-        int currentRevision = current == null ? 0 : current.revision();
+-        Long currentSelection = current == null ? null : current.selectedOptionId();
+-        if (current != null && Objects.equals(request.selectedOptionId(), currentSelection)) {
++        int revision = current == null ? 0 : current.revision();
++        Long selection = current == null ? null : current.selectedOptionId();
++        if (current != null && Objects.equals(request.selectedOptionId(), selection)) {
+             return StudentAnswerView.from(current);
+         }
+-        if (request.expectedRevision() != currentRevision) {
++        if (request.expectedRevision() != revision) {
+             throw new AnswerRevisionConflict(current == null
+                     ? StudentAnswerView.unsaved(questionId) : StudentAnswerView.from(current));
+         }
+@@ -77,16 +77,16 @@
+             return StudentAnswerView.unsaved(questionId);
+         }
+ 
+-        int nextRevision = Math.addExact(currentRevision, 1);
++        int next = Math.addExact(revision, 1);
+         Answer changed = new Answer(attemptId, attempt.examId(), questionId,
+-                request.selectedOptionId(), nextRevision, now);
++                request.selectedOptionId(), next, now);
+         if (current == null) {
+             answers.create(changed);
+-        } else if (answers.updateIfRevision(changed, currentRevision) != 1) {
++        } else if (answers.updateIfRevision(changed, revision) != 1) {
+             throw new ApiException(HttpStatus.CONFLICT, "ANSWER_CONFLICT",
+                     "The answer changed. Reload the attempt before retrying.");
+         }
+-        answers.appendRevision(new AnswerRevision(attemptId, questionId, nextRevision,
++        answers.appendRevision(new AnswerRevision(attemptId, questionId, next,
+                 request.selectedOptionId(), now));
+         return StudentAnswerView.from(changed);
+     }
+--- before/src/main/java/com/onlineexam/service/AttemptService.java
++++ after/src/main/java/com/onlineexam/service/AttemptService.java
+@@ -4,6 +4,7 @@
+ import com.onlineexam.domain.Attempt;
+ import com.onlineexam.domain.AttemptStatus;
+ import com.onlineexam.domain.Question;
++import com.onlineexam.domain.QuestionOption;
+ import com.onlineexam.dto.QuestionViews.StudentOption;
+ import com.onlineexam.dto.StudentAttemptView;
+ import com.onlineexam.dto.StudentAttemptView.QuestionState;
+@@ -25,7 +26,7 @@
+ @Service
+ public class AttemptService {
+     private final AccessControl access;
+-    private final AttemptStartTransaction startTransactions;
++    private final AttemptStartTransaction starts;
+     private final AttemptRepository attempts;
+     private final QuestionRepository questions;
+     private final QuestionOptionRepository options;
+@@ -33,12 +34,12 @@
+     private final FinalizationService finalization;
+     private final Clock clock;
+ 
+-    public AttemptService(AccessControl access, AttemptStartTransaction startTransactions,
++    public AttemptService(AccessControl access, AttemptStartTransaction starts,
+                           AttemptRepository attempts,
+                           QuestionRepository questions, QuestionOptionRepository options,
+                           AnswerRepository answers, FinalizationService finalization, Clock clock) {
+         this.access = access;
+-        this.startTransactions = startTransactions;
++        this.starts = starts;
+         this.attempts = attempts;
+         this.questions = questions;
+         this.options = options;
+@@ -51,9 +52,9 @@
+         long studentId = access.student().id();
+         Attempt attempt;
+         try {
+-            attempt = startTransactions.startOrResume(examId, studentId);
++            attempt = starts.startOrResume(examId, studentId);
+         } catch (DuplicateKeyException ignored) {
+-            attempt = startTransactions.findWinner(examId, studentId);
++            attempt = starts.findWinner(examId, studentId);
+         }
+         return read(attempt.id());
+     }
+@@ -75,8 +76,10 @@
+         }
+         Map<Long, Answer> saved = answers.findByAttempt(attemptId).stream()
+                 .collect(Collectors.toMap(Answer::questionId, Function.identity()));
++        Map<Long, List<QuestionOption>> choices = options.findByExam(attempt.examId());
+         List<QuestionState> paper = questions.findByExam(attempt.examId()).stream()
+-                .map(question -> state(question, saved.get(question.id())))
++                .map(question -> state(question, choices.getOrDefault(question.id(), List.of()),
++                        saved.get(question.id())))
+                 .toList();
+         return StudentAttemptView.from(attempt, clock.instant(), paper);
+     }
+@@ -87,12 +90,12 @@
+                 && !now.isBefore(attempt.deadlineAt());
+     }
+ 
+-    private QuestionState state(Question question, Answer saved) {
+-        List<StudentOption> safeOptions = options.findByQuestion(question.id()).stream()
++    private QuestionState state(Question question, List<QuestionOption> choices, Answer saved) {
++        List<StudentOption> view = choices.stream()
+                 .map(option -> new StudentOption(option.id(), option.text(), option.displayOrder()))
+                 .toList();
+         return new QuestionState(question.id(), question.text(), question.marks(),
+-                question.displayOrder(), safeOptions,
++                question.displayOrder(), view,
+                 saved == null ? null : saved.selectedOptionId(),
+                 saved == null ? 0 : saved.revision());
+     }
+--- before/src/main/java/com/onlineexam/service/ExamAuthoringService.java
++++ after/src/main/java/com/onlineexam/service/ExamAuthoringService.java
+@@ -16,6 +16,7 @@
+ import com.onlineexam.repository.QuestionRepository;
+ import java.util.HashSet;
+ import java.util.List;
++import java.util.Map;
+ import java.util.Set;
+ import org.springframework.dao.DataIntegrityViolationException;
+ import org.springframework.dao.DuplicateKeyException;
+@@ -46,9 +47,10 @@
+     @Transactional(readOnly = true)
+     public ExamDetail detail(long examId) {
+         Exam exam = access.ownedExam(examId);
++        Map<Long, List<QuestionOption>> choices = options.findByExam(examId);
+         List<InstructorQuestion> paper = questions.findByExam(examId).stream()
+                 .map(question -> InstructorQuestion.from(question,
+-                        options.findByQuestion(question.id())))
++                        choices.getOrDefault(question.id(), List.of())))
+                 .toList();
+         return new ExamDetail(ExamView.from(exam), paper);
+     }
+--- before/src/main/java/com/onlineexam/service/ExamPublicationService.java
++++ after/src/main/java/com/onlineexam/service/ExamPublicationService.java
+@@ -14,6 +14,7 @@
+ import java.time.temporal.ChronoUnit;
+ import java.util.HashSet;
+ import java.util.List;
++import java.util.Map;
+ import java.util.Set;
+ import org.springframework.http.HttpStatus;
+ import org.springframework.stereotype.Service;
+@@ -64,14 +65,15 @@
+         }
+         List<Question> paper = questions.findByExam(exam.id());
+         if (paper.isEmpty()) throw invalid("Add at least one valid question before publishing.");
+-        Set<Integer> questionOrders = new HashSet<>();
++        Map<Long, List<QuestionOption>> choices = options.findByExam(exam.id());
++        Set<Integer> orders = new HashSet<>();
+         for (Question question : paper) {
+             if (question.text() == null || question.text().isBlank()
+                     || question.marks() <= 0 || question.displayOrder() < 0
+-                    || !questionOrders.add(question.displayOrder())) {
++                    || !orders.add(question.displayOrder())) {
+                 throw invalid("Every question needs text, positive marks, and a unique display order.");
+             }
+-            List<QuestionOption> answers = options.findByQuestion(question.id());
++            List<QuestionOption> answers = choices.getOrDefault(question.id(), List.of());
+             if (answers.size() < 2 || answers.size() > 6) {
+                 throw invalid("Each question needs two to six options.");
+             }
+--- before/src/main/java/com/onlineexam/service/FinalizationService.java
++++ after/src/main/java/com/onlineexam/service/FinalizationService.java
+@@ -16,7 +16,6 @@
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Optional;
+-import java.util.stream.Collectors;
+ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Transactional;
+ 
+@@ -70,8 +69,7 @@
+ 
+     private StudentResultView finalizeLocked(Attempt attempt, Instant now, AttemptStatus terminal) {
+         List<Question> paper = questions.findByExam(attempt.examId());
+-        Map<Long, List<QuestionOption>> keys = paper.stream().collect(Collectors.toMap(
+-                Question::id, question -> options.findByQuestion(question.id())));
++        Map<Long, List<QuestionOption>> keys = options.findByExam(attempt.examId());
+         List<Answer> saved = answers.findByAttempt(attempt.id());
+         GradingService.Grade grade = grading.grade(paper, keys, saved);
+         if (attempts.finalizeAttempt(attempt.id(), terminal, now,
+--- before/src/main/java/com/onlineexam/service/GradingService.java
++++ after/src/main/java/com/onlineexam/service/GradingService.java
+@@ -21,8 +21,8 @@
+         this.evaluator = evaluator;
+     }
+ 
+-    public Grade grade(List<Question> paper, Map<Long, List<QuestionOption>> optionsByQuestion,
+-                       List<Answer> savedAnswers) {
++    public Grade grade(List<Question> paper, Map<Long, List<QuestionOption>> choices,
++                       List<Answer> answers) {
+         if (paper == null || paper.isEmpty()) {
+             throw new IllegalStateException("A published paper must contain questions");
+         }
+@@ -33,7 +33,7 @@
+             }
+         }
+         Map<Long, Answer> saved = new HashMap<>();
+-        for (Answer answer : savedAnswers) {
++        for (Answer answer : answers) {
+             if (!questionIds.contains(answer.questionId())
+                     || saved.putIfAbsent(answer.questionId(), answer) != null) {
+                 throw new IllegalStateException("Saved answers do not match the published paper");
+@@ -44,7 +44,7 @@
+         for (Question question : paper) {
+             totalMarks = Math.addExact(totalMarks, question.marks());
+             Answer answer = saved.get(question.id());
+-            if (evaluator.isCorrect(question, optionsByQuestion.get(question.id()),
++            if (evaluator.isCorrect(question, choices.get(question.id()),
+                     answer == null ? null : answer.selectedOptionId())) {
+                 score = Math.addExact(score, question.marks());
+             }
+--- before/src/main/java/com/onlineexam/service/StudentExamCatalogService.java
++++ after/src/main/java/com/onlineexam/service/StudentExamCatalogService.java
+@@ -3,13 +3,14 @@
+ import com.onlineexam.controller.ApiException;
+ import com.onlineexam.domain.Exam;
+ import com.onlineexam.domain.ExamStatus;
+-import com.onlineexam.domain.Question;
+ import com.onlineexam.dto.StudentExamView;
+ import com.onlineexam.repository.ExamRepository;
+ import com.onlineexam.repository.QuestionRepository;
++import com.onlineexam.repository.QuestionRepository.Stats;
+ import java.time.Clock;
+ import java.time.Instant;
+ import java.util.List;
++import java.util.Map;
+ import org.springframework.http.HttpStatus;
+ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Transactional;
+@@ -36,7 +37,9 @@
+     public List<StudentExamView> list() {
+         access.student();
+         Instant now = clock.instant();
+-        return exams.findPublished().stream().map(exam -> view(exam, now)).toList();
++        Map<Long, Stats> stats = questions.statsByExam();
++        return exams.findPublished().stream().map(exam -> view(exam, now,
++                stats.getOrDefault(exam.id(), new Stats(0, 0)))).toList();
+     }
+ 
+     @Transactional(readOnly = true)
+@@ -46,13 +49,11 @@
+                 .filter(found -> found.status() == ExamStatus.PUBLISHED)
+                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "NOT_FOUND",
+                         "Exam was not found."));
+-        return view(exam, clock.instant());
++        return view(exam, clock.instant(), questions.stats(examId));
+     }
+ 
+-    private StudentExamView view(Exam exam, Instant now) {
+-        List<Question> paper = questions.findByExam(exam.id());
+-        long maximumMarks = paper.stream().mapToLong(Question::marks).sum();
++    private StudentExamView view(Exam exam, Instant now, Stats totals) {
+         return StudentExamView.from(exam, availability.state(exam, now),
+-                paper.size(), maximumMarks);
++                totals.count(), totals.marks());
+     }
+ }
+--- before/src/main/resources/static/assets/app.css
++++ after/src/main/resources/static/assets/app.css
+@@ -1,28 +1,1522 @@
+-﻿:root{--bg:#f3f4f6;--surface:#fff;--ink:#1f2937;--muted:#667085;--line:#dce1e7;--primary:#2563eb;--danger:#b42318;--success:#237447;font-family:'Segoe UI',system-ui,sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.5}
+-*{box-sizing:border-box}html{min-width:320px}body{margin:0;min-height:100vh}button,input,textarea{font:inherit}button{cursor:pointer}a{color:var(--primary);text-decoration:none}a:hover{text-decoration:underline}h1,h2,h3,p{margin-top:0}h1{font-size:26px;line-height:1.3;font-weight:600}h2{font-size:19px;line-height:1.4;font-weight:600}h3{font-size:16px;line-height:1.4;font-weight:600}[hidden]{display:none!important}:focus-visible{outline:3px solid #93b4fb;outline-offset:3px}
+-.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+-.app-frame{min-height:100vh;display:flex;flex-direction:column}.app-header,.exam-header{display:flex;align-items:center;gap:32px;min-height:64px;padding:12px 28px;background:var(--surface);border-bottom:1px solid var(--line)}
+-.wordmark{display:inline-flex;align-items:center;gap:10px;color:var(--ink);font-size:18px;font-weight:600;white-space:nowrap}.wordmark:hover{text-decoration:none}.wordmark-icon{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:5px;color:#fff;background:var(--primary);font-size:18px;font-weight:600}
+-.header-nav{display:flex;align-items:center;flex-wrap:wrap;gap:6px}.header-nav a{padding:8px 12px;border-radius:4px;color:#475467;font-weight:500}.header-nav a:hover{background:#f4f6f9;text-decoration:none}.header-nav a[aria-current=page]{color:var(--primary);background:#eff4ff}
+-.header-right{display:flex;align-items:center;gap:16px;margin-left:auto}.header-label,.exam-header-label{color:var(--muted);font-size:13px}.app-footer{display:flex;justify-content:space-between;gap:16px;margin-top:auto;padding:18px 28px;color:var(--muted);border-top:1px solid var(--line);font-size:12px}
+-.primary-button,.outline-button,.sidebar-new{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:9px 16px;border:1px solid transparent;border-radius:5px;font-size:14px;font-weight:500;line-height:1.4;text-align:center;text-decoration:none}.primary-button,.sidebar-new{background:var(--primary);color:#fff}.primary-button:hover,.sidebar-new:hover{background:#1d4ed8;text-decoration:none}.outline-button{border-color:#cdd4df;background:#fff;color:#344054}.outline-button:hover{border-color:#a9b8cf;background:#f8fafc;text-decoration:none}button:disabled,.primary-button:disabled,.outline-button:disabled{opacity:.55;cursor:not-allowed}
+-.text-button-inline,.danger-link,.question-actions button{padding:5px 0;border:0;background:transparent;color:var(--primary);font-size:13px;font-weight:500}.text-button-inline:hover,.danger-link:hover,.question-actions button:hover{text-decoration:underline}.danger-link,.question-actions button:last-child{color:var(--danger)}
+-.notice{margin:16px 0;padding:12px 16px;border:1px solid #f1c9c4;border-radius:5px;background:#fef3f2;color:var(--danger);font-size:14px;overflow-wrap:anywhere}.desk-status{margin:16px 0;padding:12px 16px;border:1px solid #bcdfcd;border-radius:5px;color:var(--success);background:#effaf4}.loading-state{padding:24px 0;color:var(--muted)}.section-number{margin:0 0 6px;color:var(--muted);font-size:12px;font-weight:500}
+-.page-heading{margin-bottom:24px}.page-heading h1{margin-bottom:6px}.page-heading p,.home-subtitle{margin:0;color:var(--muted)}.home-main,.student-main{width:min(1200px,calc(100% - 48px));margin:0 auto;padding:28px 0 40px;flex:1}
+-.dashboard-panel,.account-item,.catalog-section{border:1px solid var(--line);border-radius:6px;background:var(--surface)}.account-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-bottom:24px}.account-item{display:flex;flex-direction:column;gap:10px;padding:20px;min-width:0}.account-item span{color:var(--muted);font-size:13px}.account-item strong{font-size:19px;font-weight:600;overflow-wrap:anywhere}.dashboard-panel{padding:24px}.dashboard-panel h2{margin-bottom:8px}.dashboard-panel p{margin-bottom:20px;color:var(--muted)}.workspace-link{width:auto}
+-.login-shell{display:grid;place-items:center;min-height:100vh;padding:32px 20px}.form-panel{width:min(420px,100%);padding:32px;border:1px solid var(--line);border-radius:7px;background:var(--surface);box-shadow:0 2px 6px #10182808}.login-brand{margin-bottom:28px}.form-content h1{margin-bottom:8px;font-size:24px}.form-intro{margin-bottom:24px;color:var(--muted)}
+-.field{margin-bottom:20px;min-width:0}.field label{display:block;margin-bottom:7px;color:#344054;font-size:14px;font-weight:500}.field input,.field textarea,.option-row input[type=text]{display:block;width:100%;min-height:42px;padding:9px 12px;border:1px solid #cdd4df;border-radius:5px;color:var(--ink);background:#fff}.field textarea{min-height:90px;resize:vertical}.field input::placeholder,.field textarea::placeholder{color:#7b8494}.field input:focus,.field textarea:focus,.option-row input[type=text]:focus{outline:2px solid #93b4fb;outline-offset:1px;border-color:var(--primary)}.field input:disabled,.field textarea:disabled{background:#f5f6f8;color:#667085}.password-wrap{position:relative}.password-wrap input{padding-right:66px}.text-button{position:absolute;right:8px;top:50%;transform:translateY(-50%);padding:6px;border:0;background:transparent;color:var(--primary);font-size:13px}#sign-in{width:100%}.help-copy{margin:20px 0 0;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+-.desk-layout{display:grid;grid-template-columns:248px minmax(0,1fr);align-items:start;gap:24px;width:min(1440px,calc(100% - 48px));margin:28px auto 40px;flex:1}.desk-sidebar{min-width:0;padding:16px;border:1px solid var(--line);border-radius:6px;background:#fff}.sidebar-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;font-weight:600}.sidebar-heading span:last-child,.count-mark{display:inline-flex;align-items:center;justify-content:center;min-width:28px;padding:2px 7px;border-radius:4px;background:#eef1f5;color:#475467;font-size:12px;font-weight:500;vertical-align:middle}.sidebar-new{width:100%;margin-bottom:12px}.exam-list{display:grid;gap:5px}.exam-list-item{width:100%;padding:12px;border:1px solid transparent;border-radius:5px;background:#fff;color:var(--ink);text-align:left}.exam-list-item:hover{background:#f6f8fa}.exam-list-item.active,.exam-list-item.selected,.exam-list-item[aria-current=true]{border-color:#c4d5fb;background:#eff4ff}.exam-list-item strong{display:block;margin-bottom:4px;overflow-wrap:anywhere;font-size:14px;font-weight:500}.exam-list-item span{color:var(--muted);font-size:12px}.desk-main{min-width:0}
+-.desk-empty{padding:36px 24px;border:1px solid var(--line);border-radius:6px;background:#fff;text-align:center}.desk-empty h2{margin-bottom:8px}.desk-empty p{margin:0 0 20px;color:var(--muted)}.editor-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:0 0 20px}.editor-heading h2{margin:0;overflow-wrap:anywhere;font-size:22px}
+-.status-pill,.catalog-card-state{display:inline-block;width:max-content;padding:3px 9px;border:1px solid #c9d8fb;border-radius:4px;color:#1d4ed8;background:#eff4ff;font-size:12px;font-weight:500;white-space:nowrap}.status-pill.published,.catalog-card-state.open{background:#effaf4;border-color:#bcdfcd;color:#237447}.catalog-card-state.upcoming{color:#8a5e17;background:#fffaeb;border-color:#f0dfb3}.catalog-card-state.closed{color:#667085;background:#f4f5f7;border-color:#dce1e7}
+-.editor-form{padding:24px;border:1px solid var(--line);border-radius:6px;background:#fff}.optional{margin-left:4px;font-weight:400;color:var(--muted)}.form-row{display:grid;grid-template-columns:140px repeat(2,minmax(0,1fr));gap:16px}.editor-actions{display:flex;align-items:center;flex-wrap:wrap;gap:20px}
+-.paper-section,.results-section{margin-top:24px;padding:24px;border:1px solid var(--line);border-radius:6px;background:#fff}.paper-heading,.catalog-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px}.paper-heading h2,.catalog-heading h2{margin:0}.count-mark{margin-left:5px}.question-list,.results-list{border-top:1px solid var(--line)}.question-card{position:relative;padding:20px 100px 20px 0;border-bottom:1px solid var(--line)}.question-number{font-size:12px;color:var(--muted)}.question-card h3{margin:6px 0;overflow-wrap:anywhere}.question-meta,.question-key{margin:5px 0 0;color:var(--muted);font-size:13px;overflow-wrap:anywhere}.question-key{color:var(--success)}.question-actions{display:flex;gap:16px;position:absolute;top:18px;right:0}.paper-empty,.catalog-empty{margin:0;padding:20px 0;color:var(--muted)}
+-.question-editor{margin:24px 0;padding:20px;border:1px solid var(--line);border-radius:5px;background:#f8fafc}.question-editor-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.question-editor-heading h3{margin:0}.marks-field{max-width:130px}.options-field{min-width:0;margin:20px 0;padding:0;border:0}.options-field legend{margin-bottom:12px;font-weight:500}.options-field legend span{display:block;color:var(--muted);font-size:12px;font-weight:400}#options-list{display:grid;gap:10px}.option-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:12px}.option-row input[type=radio]{width:18px;height:18px;accent-color:var(--primary)}.option-row button{padding:8px 0;border:0;background:transparent;color:var(--danger);font-size:12px}#add-option{margin-top:12px}
+-.publish-band{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}.publish-band strong{font-weight:600}.publish-band p{max-width:480px;margin:5px 0 0;color:var(--muted);font-size:13px}.student-intro{margin-bottom:24px}.student-intro h1{margin-bottom:6px}.student-intro p{margin-bottom:0;color:var(--muted)}.catalog-section{padding:24px}.catalog-table-wrap{overflow-x:auto}.catalog-table{width:100%;border-collapse:collapse;text-align:left}.catalog-table th{padding:12px 16px;border-bottom:1px solid var(--line);background:#f8fafc;color:#667085;font-size:12px;font-weight:600}.catalog-table td{padding:18px 16px;border-bottom:1px solid var(--line);vertical-align:middle}.catalog-card:last-child td{border-bottom:0}.catalog-card h3{margin:0 0 5px;font-size:15px;overflow-wrap:anywhere}.catalog-card-description{max-width:440px;margin:0;color:var(--muted);font-size:13px;overflow-wrap:anywhere}.catalog-card-meta{display:flex;flex-direction:column;gap:3px;color:var(--muted);font-size:13px;white-space:nowrap}.catalog-card .outline-button{white-space:nowrap}
+-.exam-dialog{width:min(580px,calc(100% - 32px));max-height:calc(100vh - 32px);padding:24px;border:1px solid var(--line);border-radius:7px;color:var(--ink);background:#fff;box-shadow:0 8px 32px #10182826}.exam-dialog::backdrop{background:#10182866}.dialog-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;color:var(--muted);font-size:13px}.dialog-top button{width:32px;height:32px;padding:0;border:0;border-radius:4px;color:#667085;background:transparent;font-size:24px;line-height:1}.dialog-top button:hover{background:#f4f5f7}.exam-dialog h2{margin:0 0 12px;font-size:22px;overflow-wrap:anywhere}.dialog-description{color:var(--muted);overflow-wrap:anywhere}.dialog-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0;padding:16px;background:#f8fafc;border:1px solid var(--line);border-radius:5px}.dialog-facts dt{color:var(--muted);font-size:12px}.dialog-facts dd{margin:4px 0 0;font-weight:500;overflow-wrap:anywhere}.dialog-rules h3{margin-bottom:8px}.dialog-rules ol{padding-left:22px;color:#475467;font-size:13px}.dialog-rules li{margin-bottom:8px}.dialog-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:12px;margin-top:24px}
+-.exam-header-label{margin:0 auto}.timer-box{display:flex;align-items:center;gap:12px;margin-left:auto;padding-left:20px;border-left:1px solid var(--line);white-space:nowrap}.timer-box span{color:var(--muted);font-size:12px}.timer-box strong{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}.timer-box.urgent strong{color:var(--danger)}.exam-loading,.exam-global-error{width:min(1200px,calc(100% - 48px));margin:20px auto}.exam-layout{display:grid;grid-template-columns:260px minmax(0,1fr);align-items:start;gap:24px;width:min(1320px,calc(100% - 48px));margin:28px auto 40px;flex:1}.exam-sidebar{display:flex;flex-direction:column;min-width:0;padding:20px;border:1px solid var(--line);border-radius:6px;background:#fff}.exam-sidebar h1{margin:0 0 8px;font-size:19px;overflow-wrap:anywhere}.exam-progress{margin:0;color:var(--muted);font-size:13px}.question-navigation{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:20px}.question-navigation button{height:38px;padding:0;border:1px solid #cdd4df;border-radius:4px;color:#475467;background:#fff;font-size:13px}.question-navigation button:hover{border-color:var(--primary)}.question-navigation button[aria-current=true]{border-color:var(--primary);color:#fff;background:var(--primary)}.question-navigation button.answered:not([aria-current=true]){color:var(--success);border-color:#bcdfcd;background:#effaf4}.question-navigation button.saving:not([aria-current=true]){color:#8a5e17;border-color:#f0dfb3;background:#fffaeb}.question-navigation button.unsaved:not([aria-current=true]){color:var(--danger);border-color:#f1c9c4;background:#fef3f2}
+-.exam-sidebar-bottom{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}.exam-sidebar-bottom span{color:var(--muted);font-size:12px}.exam-sidebar-bottom strong{display:block;margin-top:4px;font-size:13px;font-weight:500}.exam-sidebar-bottom p{margin:8px 0 16px;color:var(--muted);font-size:12px}.exam-sidebar-bottom a{font-size:13px}.exam-content{min-width:0;padding:24px;border:1px solid var(--line);border-radius:6px;background:#fff}.exam-content-top{display:flex;justify-content:space-between;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px}.question-panel{padding-top:24px}.question-heading h2{margin:8px 0 24px;font-size:22px;line-height:1.5;overflow-wrap:anywhere}.answer-fieldset{min-width:0;padding:0;margin:0;border:0}#answer-options{display:grid;gap:12px}.answer-option{display:flex;align-items:center;gap:12px;min-height:50px;padding:12px 16px;border:1px solid var(--line);border-radius:5px;cursor:pointer}.answer-option:hover{border-color:#a9b8cf;background:#f8fafc}.answer-option.selected{border-color:#9bb9fa;background:#eff4ff}.answer-option input{flex:none;width:17px;height:17px;margin:0;accent-color:var(--primary)}.answer-option span{min-width:0;overflow-wrap:anywhere}.answer-option:has(input:focus-visible){outline:3px solid #93b4fb;outline-offset:2px}.answer-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:16px}.answer-save-state{color:var(--success);font-size:13px}.answer-save-state.saving{color:#8a5e17}.answer-save-state.unsaved,.answer-save-state.conflict{color:var(--danger)}#retry-save{margin-top:12px}
+-.exam-navigation{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:32px;padding-top:20px;border-top:1px solid var(--line)}.submit-attempt{margin-left:auto;border-color:var(--primary);color:var(--primary)}.submission-note{margin:12px 0 0;font-size:12px;color:var(--muted);text-align:right}.terminal-panel{margin-top:24px}.terminal-panel h2{margin-bottom:8px}.terminal-panel p{color:var(--muted)}.result-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0}.result-summary div{display:flex;flex-direction:column;gap:10px;padding:18px;border:1px solid var(--line);border-radius:5px;background:#f8fafc}.result-summary span{color:var(--muted);font-size:12px}.result-summary strong{font-size:23px;font-weight:600;overflow-wrap:anywhere}.terminal-panel .result-finalized{font-size:12px}.terminal-panel .outline-button{margin-top:12px}.result-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0;border-bottom:1px solid var(--line)}.result-row>div{display:flex;flex-direction:column;gap:4px;min-width:0}.result-row strong{font-size:14px;font-weight:600;overflow-wrap:anywhere}.result-row span{color:var(--muted);font-size:12px}.result-row-outcome{text-align:right}
+-@media(max-width:1000px){.desk-layout{grid-template-columns:220px minmax(0,1fr);gap:20px}.form-row{grid-template-columns:repeat(2,minmax(0,1fr))}.form-row .field:first-child{grid-column:1/-1;max-width:180px}.catalog-table th,.catalog-table td{padding-left:12px;padding-right:12px}.exam-layout{grid-template-columns:230px minmax(0,1fr);gap:20px}.timer-box span{display:none}}
+-@media(max-width:760px){.app-header,.exam-header{flex-wrap:wrap;gap:12px 20px;padding:12px 20px}.header-right{gap:10px}.header-label{display:none}.header-nav{order:3;width:100%}.header-nav a{padding:6px 10px;font-size:13px}.home-main,.student-main,.desk-layout,.exam-layout{width:calc(100% - 32px)}.account-grid{gap:12px}.account-item{padding:16px}.account-item strong{font-size:16px}.desk-layout,.exam-layout{display:block;margin-top:20px}.desk-sidebar,.exam-sidebar{margin-bottom:20px}.exam-list{max-height:200px;overflow-y:auto}.exam-content,.catalog-section,.paper-section,.results-section,.editor-form{padding:20px}.catalog-table,.catalog-table tbody{display:block}.catalog-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}.catalog-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:20px 0;border-bottom:1px solid var(--line)}.catalog-card:last-child{border-bottom:0}.catalog-table td{display:block;min-width:0;padding:0;border:0}.catalog-table td:first-child,.catalog-table td:last-child{grid-column:1/-1}.catalog-card-meta{flex-direction:row;flex-wrap:wrap;gap:5px 14px;white-space:normal}.catalog-card .outline-button{width:100%;white-space:normal}.exam-header-label{display:none}.timer-box{padding-left:12px}.question-navigation{grid-template-columns:repeat(auto-fill,minmax(38px,1fr))}.exam-sidebar-bottom{margin-top:16px;padding-top:16px}.exam-sidebar-bottom p{margin-bottom:10px}.app-footer{padding:16px 20px}}
+-@media(max-width:480px){h1{font-size:24px}.wordmark{font-size:17px}.account-grid{grid-template-columns:1fr}.account-item{flex-direction:row;justify-content:space-between;align-items:center;gap:16px}.account-item strong{text-align:right}.dashboard-panel,.editor-form,.paper-section,.results-section,.catalog-section,.exam-content{padding:16px}.form-panel{padding:24px}.form-row{grid-template-columns:1fr;gap:0}.form-row .field:first-child{max-width:none}.editor-heading{align-items:flex-start;gap:12px}.editor-heading h2{font-size:20px}.question-card{padding-right:0}.question-actions{position:static;margin-top:12px}.question-editor{padding:16px}.option-row{gap:8px}.publish-band{align-items:stretch;flex-direction:column}.question-heading h2{font-size:20px}.exam-navigation .submit-attempt{margin-left:0;width:100%}.exam-navigation>button:not(.submit-attempt){flex:1}.submission-note{text-align:left}.result-summary{grid-template-columns:1fr}.result-summary div{flex-direction:row;align-items:center;justify-content:space-between}.result-summary strong{font-size:20px}.result-row{align-items:flex-start;flex-wrap:wrap}.dialog-actions>button{flex:1}.app-footer{font-size:11px}}
++﻿:root {
++  --bg:#f3f4f6;
++  --surface:#fff;
++  --ink:#1f2937;
++  --muted:#667085;
++  --line:#dce1e7;
++  --primary:#2563eb;
++  --danger:#b42318;
++  --success:#237447;
++  font-family:'Segoe UI',system-ui,sans-serif;
++  color:var(--ink);
++  background:var(--bg);
++  font-size:14px;
++  line-height:1.5
++}
++
++* {
++  box-sizing:border-box
++}
++
++html {
++  min-width:320px
++}
++
++body {
++  margin:0;
++  min-height:100vh
++}
++
++button,input,textarea {
++  font:inherit
++}
++
++button {
++  cursor:pointer
++}
++
++a {
++  color:var(--primary);
++  text-decoration:none
++}
++
++a:hover {
++  text-decoration:underline
++}
++
++h1,h2,h3,p {
++  margin-top:0
++}
++
++h1 {
++  font-size:26px;
++  line-height:1.3;
++  font-weight:600
++}
++
++h2 {
++  font-size:19px;
++  line-height:1.4;
++  font-weight:600
++}
++
++h3 {
++  font-size:16px;
++  line-height:1.4;
++  font-weight:600
++}
++
++[hidden] {
++  display:none!important
++}
++
++:focus-visible {
++  outline:3px solid #93b4fb;
++  outline-offset:3px
++}
++
++.sr-only {
++  position:absolute!important;
++  width:1px;
++  height:1px;
++  padding:0;
++  margin:-1px;
++  overflow:hidden;
++  clip:rect(0,0,0,0);
++  white-space:nowrap;
++  border:0
++}
++
++.app-frame {
++  min-height:100vh;
++  display:flex;
++  flex-direction:column
++}
++
++.app-header,.exam-header {
++  display:flex;
++  align-items:center;
++  gap:32px;
++  min-height:64px;
++  padding:12px 28px;
++  background:var(--surface);
++  border-bottom:1px solid var(--line)
++}
++
++.wordmark {
++  display:inline-flex;
++  align-items:center;
++  gap:10px;
++  color:var(--ink);
++  font-size:18px;
++  font-weight:600;
++  white-space:nowrap
++}
++
++.wordmark:hover {
++  text-decoration:none
++}
++
++.wordmark-icon {
++  display:inline-grid;
++  place-items:center;
++  width:32px;
++  height:32px;
++  border-radius:5px;
++  color:#fff;
++  background:var(--primary);
++  font-size:18px;
++  font-weight:600
++}
++
++.header-nav {
++  display:flex;
++  align-items:center;
++  flex-wrap:wrap;
++  gap:6px
++}
++
++.header-nav a {
++  padding:8px 12px;
++  border-radius:4px;
++  color:#475467;
++  font-weight:500
++}
++
++.header-nav a:hover {
++  background:#f4f6f9;
++  text-decoration:none
++}
++
++.header-nav a[aria-current=page] {
++  color:var(--primary);
++  background:#eff4ff
++}
++
++.header-right {
++  display:flex;
++  align-items:center;
++  gap:16px;
++  margin-left:auto
++}
++
++.header-label,.exam-header-label {
++  color:var(--muted);
++  font-size:13px
++}
++
++.app-footer {
++  display:flex;
++  justify-content:space-between;
++  gap:16px;
++  margin-top:auto;
++  padding:18px 28px;
++  color:var(--muted);
++  border-top:1px solid var(--line);
++  font-size:12px
++}
++
++.primary-button,.outline-button,.sidebar-new {
++  display:inline-flex;
++  align-items:center;
++  justify-content:center;
++  gap:8px;
++  min-height:40px;
++  padding:9px 16px;
++  border:1px solid transparent;
++  border-radius:5px;
++  font-size:14px;
++  font-weight:500;
++  line-height:1.4;
++  text-align:center;
++  text-decoration:none
++}
++
++.primary-button,.sidebar-new {
++  background:var(--primary);
++  color:#fff
++}
++
++.primary-button:hover,.sidebar-new:hover {
++  background:#1d4ed8;
++  text-decoration:none
++}
++
++.outline-button {
++  border-color:#cdd4df;
++  background:#fff;
++  color:#344054
++}
++
++.outline-button:hover {
++  border-color:#a9b8cf;
++  background:#f8fafc;
++  text-decoration:none
++}
++
++button:disabled,.primary-button:disabled,.outline-button:disabled {
++  opacity:.55;
++  cursor:not-allowed
++}
++
++.text-button-inline,.danger-link,.question-actions button {
++  padding:5px 0;
++  border:0;
++  background:transparent;
++  color:var(--primary);
++  font-size:13px;
++  font-weight:500
++}
++
++.text-button-inline:hover,.danger-link:hover,.question-actions button:hover {
++  text-decoration:underline
++}
++
++.danger-link,.question-actions button:last-child {
++  color:var(--danger)
++}
++
++.notice {
++  margin:16px 0;
++  padding:12px 16px;
++  border:1px solid #f1c9c4;
++  border-radius:5px;
++  background:#fef3f2;
++  color:var(--danger);
++  font-size:14px;
++  overflow-wrap:anywhere
++}
++
++.desk-status {
++  margin:16px 0;
++  padding:12px 16px;
++  border:1px solid #bcdfcd;
++  border-radius:5px;
++  color:var(--success);
++  background:#effaf4
++}
++
++.loading-state {
++  padding:24px 0;
++  color:var(--muted)
++}
++
++.section-number {
++  margin:0 0 6px;
++  color:var(--muted);
++  font-size:12px;
++  font-weight:500
++}
++
++.page-heading {
++  margin-bottom:24px
++}
++
++.page-heading h1 {
++  margin-bottom:6px
++}
++
++.page-heading p,.home-subtitle {
++  margin:0;
++  color:var(--muted)
++}
++
++.home-main,.student-main {
++  width:min(1200px,calc(100% - 48px));
++  margin:0 auto;
++  padding:28px 0 40px;
++  flex:1
++}
++
++.dashboard-panel,.account-item,.catalog-section {
++  border:1px solid var(--line);
++  border-radius:6px;
++  background:var(--surface)
++}
++
++.account-grid {
++  display:grid;
++  grid-template-columns:repeat(3,minmax(0,1fr));
++  gap:20px;
++  margin-bottom:24px
++}
++
++.account-item {
++  display:flex;
++  flex-direction:column;
++  gap:10px;
++  padding:20px;
++  min-width:0
++}
++
++.account-item span {
++  color:var(--muted);
++  font-size:13px
++}
++
++.account-item strong {
++  font-size:19px;
++  font-weight:600;
++  overflow-wrap:anywhere
++}
++
++.dashboard-panel {
++  padding:24px
++}
++
++.dashboard-panel h2 {
++  margin-bottom:8px
++}
++
++.dashboard-panel p {
++  margin-bottom:20px;
++  color:var(--muted)
++}
++
++.workspace-link {
++  width:auto
++}
++
++.login-shell {
++  display:grid;
++  place-items:center;
++  min-height:100vh;
++  padding:32px 20px
++}
++
++.form-panel {
++  width:min(420px,100%);
++  padding:32px;
++  border:1px solid var(--line);
++  border-radius:7px;
++  background:var(--surface);
++  box-shadow:0 2px 6px #10182808
++}
++
++.login-brand {
++  margin-bottom:28px
++}
++
++.form-content h1 {
++  margin-bottom:8px;
++  font-size:24px
++}
++
++.form-intro {
++  margin-bottom:24px;
++  color:var(--muted)
++}
++
++.field {
++  margin-bottom:20px;
++  min-width:0
++}
++
++.field label {
++  display:block;
++  margin-bottom:7px;
++  color:#344054;
++  font-size:14px;
++  font-weight:500
++}
++
++.field input,.field textarea,.option-row input[type=text] {
++  display:block;
++  width:100%;
++  min-height:42px;
++  padding:9px 12px;
++  border:1px solid #cdd4df;
++  border-radius:5px;
++  color:var(--ink);
++  background:#fff
++}
++
++.field textarea {
++  min-height:90px;
++  resize:vertical
++}
++
++.field input::placeholder,.field textarea::placeholder {
++  color:#7b8494
++}
++
++.field input:focus,.field textarea:focus,.option-row input[type=text]:focus {
++  outline:2px solid #93b4fb;
++  outline-offset:1px;
++  border-color:var(--primary)
++}
++
++.field input:disabled,.field textarea:disabled {
++  background:#f5f6f8;
++  color:#667085
++}
++
++.password-wrap {
++  position:relative
++}
++
++.password-wrap input {
++  padding-right:66px
++}
++
++.text-button {
++  position:absolute;
++  right:8px;
++  top:50%;
++  transform:translateY(-50%);
++  padding:6px;
++  border:0;
++  background:transparent;
++  color:var(--primary);
++  font-size:13px
++}
++
++#sign-in {
++  width:100%
++}
++
++.help-copy {
++  margin:20px 0 0;
++  padding-top:20px;
++  border-top:1px solid var(--line);
++  font-size:12px;
++  color:var(--muted)
++}
++
++.desk-layout {
++  display:grid;
++  grid-template-columns:248px minmax(0,1fr);
++  align-items:start;
++  gap:24px;
++  width:min(1440px,calc(100% - 48px));
++  margin:28px auto 40px;
++  flex:1
++}
++
++.desk-sidebar {
++  min-width:0;
++  padding:16px;
++  border:1px solid var(--line);
++  border-radius:6px;
++  background:#fff
++}
++
++.sidebar-heading {
++  display:flex;
++  justify-content:space-between;
++  align-items:center;
++  gap:12px;
++  margin-bottom:16px;
++  font-weight:600
++}
++
++.sidebar-heading span:last-child,.count-mark {
++  display:inline-flex;
++  align-items:center;
++  justify-content:center;
++  min-width:28px;
++  padding:2px 7px;
++  border-radius:4px;
++  background:#eef1f5;
++  color:#475467;
++  font-size:12px;
++  font-weight:500;
++  vertical-align:middle
++}
++
++.sidebar-new {
++  width:100%;
++  margin-bottom:12px
++}
++
++.exam-list {
++  display:grid;
++  gap:5px
++}
++
++.exam-list-item {
++  width:100%;
++  padding:12px;
++  border:1px solid transparent;
++  border-radius:5px;
++  background:#fff;
++  color:var(--ink);
++  text-align:left
++}
++
++.exam-list-item:hover {
++  background:#f6f8fa
++}
++
++.exam-list-item.active,.exam-list-item.selected,.exam-list-item[aria-current=true] {
++  border-color:#c4d5fb;
++  background:#eff4ff
++}
++
++.exam-list-item strong {
++  display:block;
++  margin-bottom:4px;
++  overflow-wrap:anywhere;
++  font-size:14px;
++  font-weight:500
++}
++
++.exam-list-item span {
++  color:var(--muted);
++  font-size:12px
++}
++
++.desk-main {
++  min-width:0
++}
++
++.desk-empty {
++  padding:36px 24px;
++  border:1px solid var(--line);
++  border-radius:6px;
++  background:#fff;
++  text-align:center
++}
++
++.desk-empty h2 {
++  margin-bottom:8px
++}
++
++.desk-empty p {
++  margin:0 0 20px;
++  color:var(--muted)
++}
++
++.editor-heading {
++  display:flex;
++  justify-content:space-between;
++  align-items:center;
++  gap:20px;
++  margin:0 0 20px
++}
++
++.editor-heading h2 {
++  margin:0;
++  overflow-wrap:anywhere;
++  font-size:22px
++}
++
++.status-pill,.catalog-card-state {
++  display:inline-block;
++  width:max-content;
++  padding:3px 9px;
++  border:1px solid #c9d8fb;
++  border-radius:4px;
++  color:#1d4ed8;
++  background:#eff4ff;
++  font-size:12px;
++  font-weight:500;
++  white-space:nowrap
++}
++
++.status-pill.published,.catalog-card-state.open {
++  background:#effaf4;
++  border-color:#bcdfcd;
++  color:#237447
++}
++
++.catalog-card-state.upcoming {
++  color:#8a5e17;
++  background:#fffaeb;
++  border-color:#f0dfb3
++}
++
++.catalog-card-state.closed {
++  color:#667085;
++  background:#f4f5f7;
++  border-color:#dce1e7
++}
++
++.editor-form {
++  padding:24px;
++  border:1px solid var(--line);
++  border-radius:6px;
++  background:#fff
++}
++
++.optional {
++  margin-left:4px;
++  font-weight:400;
++  color:var(--muted)
++}
++
++.form-row {
++  display:grid;
++  grid-template-columns:140px repeat(2,minmax(0,1fr));
++  gap:16px
++}
++
++.editor-actions {
++  display:flex;
++  align-items:center;
++  flex-wrap:wrap;
++  gap:20px
++}
++
++.paper-section,.results-section {
++  margin-top:24px;
++  padding:24px;
++  border:1px solid var(--line);
++  border-radius:6px;
++  background:#fff
++}
++
++.paper-heading,.catalog-heading {
++  display:flex;
++  align-items:center;
++  justify-content:space-between;
++  flex-wrap:wrap;
++  gap:16px;
++  margin-bottom:20px
++}
++
++.paper-heading h2,.catalog-heading h2 {
++  margin:0
++}
++
++.count-mark {
++  margin-left:5px
++}
++
++.question-list,.results-list {
++  border-top:1px solid var(--line)
++}
++
++.question-card {
++  position:relative;
++  padding:20px 100px 20px 0;
++  border-bottom:1px solid var(--line)
++}
++
++.question-number {
++  font-size:12px;
++  color:var(--muted)
++}
++
++.question-card h3 {
++  margin:6px 0;
++  overflow-wrap:anywhere
++}
++
++.question-meta,.question-key {
++  margin:5px 0 0;
++  color:var(--muted);
++  font-size:13px;
++  overflow-wrap:anywhere
++}
++
++.question-key {
++  color:var(--success)
++}
++
++.question-actions {
++  display:flex;
++  gap:16px;
++  position:absolute;
++  top:18px;
++  right:0
++}
++
++.paper-empty,.catalog-empty {
++  margin:0;
++  padding:20px 0;
++  color:var(--muted)
++}
++
++.question-editor {
++  margin:24px 0;
++  padding:20px;
++  border:1px solid var(--line);
++  border-radius:5px;
++  background:#f8fafc
++}
++
++.question-editor-heading {
++  display:flex;
++  align-items:center;
++  justify-content:space-between;
++  gap:16px;
++  margin-bottom:20px
++}
++
++.question-editor-heading h3 {
++  margin:0
++}
++
++.marks-field {
++  max-width:130px
++}
++
++.options-field {
++  min-width:0;
++  margin:20px 0;
++  padding:0;
++  border:0
++}
++
++.options-field legend {
++  margin-bottom:12px;
++  font-weight:500
++}
++
++.options-field legend span {
++  display:block;
++  color:var(--muted);
++  font-size:12px;
++  font-weight:400
++}
++
++#options-list {
++  display:grid;
++  gap:10px
++}
++
++.option-row {
++  display:grid;
++  grid-template-columns:20px minmax(0,1fr) auto;
++  align-items:center;
++  gap:12px
++}
++
++.option-row input[type=radio] {
++  width:18px;
++  height:18px;
++  accent-color:var(--primary)
++}
++
++.option-row button {
++  padding:8px 0;
++  border:0;
++  background:transparent;
++  color:var(--danger);
++  font-size:12px
++}
++
++#add-option {
++  margin-top:12px
++}
++
++.publish-band {
++  display:flex;
++  align-items:center;
++  justify-content:space-between;
++  flex-wrap:wrap;
++  gap:20px;
++  margin-top:24px;
++  padding-top:20px;
++  border-top:1px solid var(--line)
++}
++
++.publish-band strong {
++  font-weight:600
++}
++
++.publish-band p {
++  max-width:480px;
++  margin:5px 0 0;
++  color:var(--muted);
++  font-size:13px
++}
++
++.student-intro {
++  margin-bottom:24px
++}
++
++.student-intro h1 {
++  margin-bottom:6px
++}
++
++.student-intro p {
++  margin-bottom:0;
++  color:var(--muted)
++}
++
++.catalog-section {
++  padding:24px
++}
++
++.catalog-table-wrap {
++  overflow-x:auto
++}
++
++.catalog-table {
++  width:100%;
++  border-collapse:collapse;
++  text-align:left
++}
++
++.catalog-table th {
++  padding:12px 16px;
++  border-bottom:1px solid var(--line);
++  background:#f8fafc;
++  color:#667085;
++  font-size:12px;
++  font-weight:600
++}
++
++.catalog-table td {
++  padding:18px 16px;
++  border-bottom:1px solid var(--line);
++  vertical-align:middle
++}
++
++.catalog-card:last-child td {
++  border-bottom:0
++}
++
++.catalog-card h3 {
++  margin:0 0 5px;
++  font-size:15px;
++  overflow-wrap:anywhere
++}
++
++.catalog-card-description {
++  max-width:440px;
++  margin:0;
++  color:var(--muted);
++  font-size:13px;
++  overflow-wrap:anywhere
++}
++
++.catalog-card-meta {
++  display:flex;
++  flex-direction:column;
++  gap:3px;
++  color:var(--muted);
++  font-size:13px;
++  white-space:nowrap
++}
++
++.catalog-card .outline-button {
++  white-space:nowrap
++}
++
++.exam-dialog {
++  width:min(580px,calc(100% - 32px));
++  max-height:calc(100vh - 32px);
++  padding:24px;
++  border:1px solid var(--line);
++  border-radius:7px;
++  color:var(--ink);
++  background:#fff;
++  box-shadow:0 8px 32px #10182826
++}
++
++.exam-dialog::backdrop {
++  background:#10182866
++}
++
++.dialog-top {
++  display:flex;
++  align-items:center;
++  justify-content:space-between;
++  margin-bottom:16px;
++  color:var(--muted);
++  font-size:13px
++}
++
++.dialog-top button {
++  width:32px;
++  height:32px;
++  padding:0;
++  border:0;
++  border-radius:4px;
++  color:#667085;
++  background:transparent;
++  font-size:24px;
++  line-height:1
++}
++
++.dialog-top button:hover {
++  background:#f4f5f7
++}
++
++.exam-dialog h2 {
++  margin:0 0 12px;
++  font-size:22px;
++  overflow-wrap:anywhere
++}
++
++.dialog-description {
++  color:var(--muted);
++  overflow-wrap:anywhere
++}
++
++.dialog-facts {
++  display:grid;
++  grid-template-columns:repeat(2,minmax(0,1fr));
++  gap:16px;
++  margin:20px 0;
++  padding:16px;
++  background:#f8fafc;
++  border:1px solid var(--line);
++  border-radius:5px
++}
++
++.dialog-facts dt {
++  color:var(--muted);
++  font-size:12px
++}
++
++.dialog-facts dd {
++  margin:4px 0 0;
++  font-weight:500;
++  overflow-wrap:anywhere
++}
++
++.dialog-rules h3 {
++  margin-bottom:8px
++}
++
++.dialog-rules ol {
++  padding-left:22px;
++  color:#475467;
++  font-size:13px
++}
++
++.dialog-rules li {
++  margin-bottom:8px
++}
++
++.dialog-actions {
++  display:flex;
++  justify-content:flex-end;
++  flex-wrap:wrap;
++  gap:12px;
++  margin-top:24px
++}
++
++.exam-header-label {
++  margin:0 auto
++}
++
++.timer-box {
++  display:flex;
++  align-items:center;
++  gap:12px;
++  margin-left:auto;
++  padding-left:20px;
++  border-left:1px solid var(--line);
++  white-space:nowrap
++}
++
++.timer-box span {
++  color:var(--muted);
++  font-size:12px
++}
++
++.timer-box strong {
++  font-size:24px;
++  font-weight:600;
++  font-variant-numeric:tabular-nums
++}
++
++.timer-box.urgent strong {
++  color:var(--danger)
++}
++
++.exam-loading,.exam-global-error {
++  width:min(1200px,calc(100% - 48px));
++  margin:20px auto
++}
++
++.exam-layout {
++  display:grid;
++  grid-template-columns:260px minmax(0,1fr);
++  align-items:start;
++  gap:24px;
++  width:min(1320px,calc(100% - 48px));
++  margin:28px auto 40px;
++  flex:1
++}
++
++.exam-sidebar {
++  display:flex;
++  flex-direction:column;
++  min-width:0;
++  padding:20px;
++  border:1px solid var(--line);
++  border-radius:6px;
++  background:#fff
++}
++
++.exam-sidebar h1 {
++  margin:0 0 8px;
++  font-size:19px;
++  overflow-wrap:anywhere
++}
++
++.exam-progress {
++  margin:0;
++  color:var(--muted);
++  font-size:13px
++}
++
++.question-navigation {
++  display:grid;
++  grid-template-columns:repeat(5,minmax(0,1fr));
++  gap:7px;
++  margin-top:20px
++}
++
++.question-navigation button {
++  height:38px;
++  padding:0;
++  border:1px solid #cdd4df;
++  border-radius:4px;
++  color:#475467;
++  background:#fff;
++  font-size:13px
++}
++
++.question-navigation button:hover {
++  border-color:var(--primary)
++}
++
++.question-navigation button[aria-current=true] {
++  border-color:var(--primary);
++  color:#fff;
++  background:var(--primary)
++}
++
++.question-navigation button.answered:not([aria-current=true]) {
++  color:var(--success);
++  border-color:#bcdfcd;
++  background:#effaf4
++}
++
++.question-navigation button.saving:not([aria-current=true]) {
++  color:#8a5e17;
++  border-color:#f0dfb3;
++  background:#fffaeb
++}
++
++.question-navigation button.unsaved:not([aria-current=true]) {
++  color:var(--danger);
++  border-color:#f1c9c4;
++  background:#fef3f2
++}
++
++.exam-sidebar-bottom {
++  margin-top:24px;
++  padding-top:20px;
++  border-top:1px solid var(--line)
++}
++
++.exam-sidebar-bottom span {
++  color:var(--muted);
++  font-size:12px
++}
++
++.exam-sidebar-bottom strong {
++  display:block;
++  margin-top:4px;
++  font-size:13px;
++  font-weight:500
++}
++
++.exam-sidebar-bottom p {
++  margin:8px 0 16px;
++  color:var(--muted);
++  font-size:12px
++}
++
++.exam-sidebar-bottom a {
++  font-size:13px
++}
++
++.exam-content {
++  min-width:0;
++  padding:24px;
++  border:1px solid var(--line);
++  border-radius:6px;
++  background:#fff
++}
++
++.exam-content-top {
++  display:flex;
++  justify-content:space-between;
++  gap:16px;
++  padding-bottom:16px;
++  border-bottom:1px solid var(--line);
++  color:var(--muted);
++  font-size:12px
++}
++
++.question-panel {
++  padding-top:24px
++}
++
++.question-heading h2 {
++  margin:8px 0 24px;
++  font-size:22px;
++  line-height:1.5;
++  overflow-wrap:anywhere
++}
++
++.answer-fieldset {
++  min-width:0;
++  padding:0;
++  margin:0;
++  border:0
++}
++
++#answer-options {
++  display:grid;
++  gap:12px
++}
++
++.answer-option {
++  display:flex;
++  align-items:center;
++  gap:12px;
++  min-height:50px;
++  padding:12px 16px;
++  border:1px solid var(--line);
++  border-radius:5px;
++  cursor:pointer
++}
++
++.answer-option:hover {
++  border-color:#a9b8cf;
++  background:#f8fafc
++}
++
++.answer-option.selected {
++  border-color:#9bb9fa;
++  background:#eff4ff
++}
++
++.answer-option input {
++  flex:none;
++  width:17px;
++  height:17px;
++  margin:0;
++  accent-color:var(--primary)
++}
++
++.answer-option span {
++  min-width:0;
++  overflow-wrap:anywhere
++}
++
++.answer-option:has(input:focus-visible) {
++  outline:3px solid #93b4fb;
++  outline-offset:2px
++}
++
++.answer-footer {
++  display:flex;
++  align-items:center;
++  justify-content:space-between;
++  flex-wrap:wrap;
++  gap:12px;
++  margin-top:16px
++}
++
++.answer-save-state {
++  color:var(--success);
++  font-size:13px
++}
++
++.answer-save-state.saving {
++  color:#8a5e17
++}
++
++.answer-save-state.unsaved,.answer-save-state.conflict {
++  color:var(--danger)
++}
++
++#retry-save {
++  margin-top:12px
++}
++
++.exam-navigation {
++  display:flex;
++  align-items:center;
++  flex-wrap:wrap;
++  gap:12px;
++  margin-top:32px;
++  padding-top:20px;
++  border-top:1px solid var(--line)
++}
++
++.submit-attempt {
++  margin-left:auto;
++  border-color:var(--primary);
++  color:var(--primary)
++}
++
++.submission-note {
++  margin:12px 0 0;
++  font-size:12px;
++  color:var(--muted);
++  text-align:right
++}
++
++.terminal-panel {
++  margin-top:24px
++}
++
++.terminal-panel h2 {
++  margin-bottom:8px
++}
++
++.terminal-panel p {
++  color:var(--muted)
++}
++
++.result-summary {
++  display:grid;
++  grid-template-columns:repeat(3,minmax(0,1fr));
++  gap:16px;
++  margin:24px 0
++}
++
++.result-summary div {
++  display:flex;
++  flex-direction:column;
++  gap:10px;
++  padding:18px;
++  border:1px solid var(--line);
++  border-radius:5px;
++  background:#f8fafc
++}
++
++.result-summary span {
++  color:var(--muted);
++  font-size:12px
++}
++
++.result-summary strong {
++  font-size:23px;
++  font-weight:600;
++  overflow-wrap:anywhere
++}
++
++.terminal-panel .result-finalized {
++  font-size:12px
++}
++
++.terminal-panel .outline-button {
++  margin-top:12px
++}
++
++.result-row {
++  display:flex;
++  align-items:center;
++  justify-content:space-between;
++  gap:20px;
++  padding:16px 0;
++  border-bottom:1px solid var(--line)
++}
++
++.result-row>div {
++  display:flex;
++  flex-direction:column;
++  gap:4px;
++  min-width:0
++}
++
++.result-row strong {
++  font-size:14px;
++  font-weight:600;
++  overflow-wrap:anywhere
++}
++
++.result-row span {
++  color:var(--muted);
++  font-size:12px
++}
++
++.result-row-outcome {
++  text-align:right
++}
++
++@media(max-width:1000px) {
++  .desk-layout {
++    grid-template-columns:220px minmax(0,1fr);
++    gap:20px
++  }
++  .form-row {
++    grid-template-columns:repeat(2,minmax(0,1fr))
++  }
++  .form-row .field:first-child {
++    grid-column:1/-1;
++    max-width:180px
++  }
++  .catalog-table th,.catalog-table td {
++    padding-left:12px;
++    padding-right:12px
++  }
++  .exam-layout {
++    grid-template-columns:230px minmax(0,1fr);
++    gap:20px
++  }
++  .timer-box span {
++    display:none
++  }
++}
++
++@media(max-width:760px) {
++  .app-header,.exam-header {
++    flex-wrap:wrap;
++    gap:12px 20px;
++    padding:12px 20px
++  }
++  .header-right {
++    gap:10px
++  }
++  .header-label {
++    display:none
++  }
++  .header-nav {
++    order:3;
++    width:100%
++  }
++  .header-nav a {
++    padding:6px 10px;
++    font-size:13px
++  }
++  .home-main,.student-main,.desk-layout,.exam-layout {
++    width:calc(100% - 32px)
++  }
++  .account-grid {
++    gap:12px
++  }
++  .account-item {
++    padding:16px
++  }
++  .account-item strong {
++    font-size:16px
++  }
++  .desk-layout,.exam-layout {
++    display:block;
++    margin-top:20px
++  }
++  .desk-sidebar,.exam-sidebar {
++    margin-bottom:20px
++  }
++  .exam-list {
++    max-height:200px;
++    overflow-y:auto
++  }
++  .exam-content,.catalog-section,.paper-section,.results-section,.editor-form {
++    padding:20px
++  }
++  .catalog-table,.catalog-table tbody {
++    display:block
++  }
++  .catalog-table thead {
++    position:absolute;
++    width:1px;
++    height:1px;
++    overflow:hidden;
++    clip:rect(0,0,0,0)
++  }
++  .catalog-card {
++    display:grid;
++    grid-template-columns:minmax(0,1fr) auto;
++    gap:12px;
++    padding:20px 0;
++    border-bottom:1px solid var(--line)
++  }
++  .catalog-card:last-child {
++    border-bottom:0
++  }
++  .catalog-table td {
++    display:block;
++    min-width:0;
++    padding:0;
++    border:0
++  }
++  .catalog-table td:first-child,.catalog-table td:last-child {
++    grid-column:1/-1
++  }
++  .catalog-card-meta {
++    flex-direction:row;
++    flex-wrap:wrap;
++    gap:5px 14px;
++    white-space:normal
++  }
++  .catalog-card .outline-button {
++    width:100%;
++    white-space:normal
++  }
++  .exam-header-label {
++    display:none
++  }
++  .timer-box {
++    padding-left:12px
++  }
++  .question-navigation {
++    grid-template-columns:repeat(auto-fill,minmax(38px,1fr))
++  }
++  .exam-sidebar-bottom {
++    margin-top:16px;
++    padding-top:16px
++  }
++  .exam-sidebar-bottom p {
++    margin-bottom:10px
++  }
++  .app-footer {
++    padding:16px 20px
++  }
++}
++
++@media(max-width:480px) {
++  h1 {
++    font-size:24px
++  }
++  .wordmark {
++    font-size:17px
++  }
++  .account-grid {
++    grid-template-columns:1fr
++  }
++  .account-item {
++    flex-direction:row;
++    justify-content:space-between;
++    align-items:center;
++    gap:16px
++  }
++  .account-item strong {
++    text-align:right
++  }
++  .dashboard-panel,.editor-form,.paper-section,.results-section,.catalog-section,.exam-content {
++    padding:16px
++  }
++  .form-panel {
++    padding:24px
++  }
++  .form-row {
++    grid-template-columns:1fr;
++    gap:0
++  }
++  .form-row .field:first-child {
++    max-width:none
++  }
++  .editor-heading {
++    align-items:flex-start;
++    gap:12px
++  }
++  .editor-heading h2 {
++    font-size:20px
++  }
++  .question-card {
++    padding-right:0
++  }
++  .question-actions {
++    position:static;
++    margin-top:12px
++  }
++  .question-editor {
++    padding:16px
++  }
++  .option-row {
++    gap:8px
++  }
++  .publish-band {
++    align-items:stretch;
++    flex-direction:column
++  }
++  .question-heading h2 {
++    font-size:20px
++  }
++  .exam-navigation .submit-attempt {
++    margin-left:0;
++    width:100%
++  }
++  .exam-navigation>button:not(.submit-attempt) {
++    flex:1
++  }
++  .submission-note {
++    text-align:left
++  }
++  .result-summary {
++    grid-template-columns:1fr
++  }
++  .result-summary div {
++    flex-direction:row;
++    align-items:center;
++    justify-content:space-between
++  }
++  .result-summary strong {
++    font-size:20px
++  }
++  .result-row {
++    align-items:flex-start;
++    flex-wrap:wrap
++  }
++  .dialog-actions>button {
++    flex:1
++  }
++  .app-footer {
++    font-size:11px
++  }
++}
+--- before/src/main/resources/static/assets/exam.js
++++ after/src/main/resources/static/assets/exam.js
+@@ -2,78 +2,9 @@
+ 
+ const $ = selector => document.querySelector(selector);
+ const attemptId = Number(new URLSearchParams(window.location.search).get('id'));
+-const state = { attempt: null, questions: [], currentIndex: 0, serverOffset: 0,
++const state = { attempt: null, questions: [], index: 0, offset: 0,
+   pending: [], processing: false, refreshing: false, submitting: false,
+   resultLoading: false, result: null, resultError: '', timeReached: false };
+-
+-function setupCompletionControls() {
+-  const connection = document.createElement('div');
+-  connection.id = 'connection-notice';
+-  connection.className = 'notice error-notice exam-global-error';
+-  connection.setAttribute('role', 'status');
+-  connection.hidden = true;
+-  $('#attempt-error').after(connection);
+-
+-  const navigation = $('#next-question').parentElement;
+-  navigation.id = 'exam-navigation';
+-  const submit = document.createElement('button');
+-  submit.id = 'submit-attempt';
+-  submit.type = 'button';
+-  submit.className = 'outline-button submit-attempt';
+-  submit.textContent = 'Submit examination';
+-  navigation.append(submit);
+-
+-  const note = document.createElement('p');
+-  note.id = 'submission-note';
+-  note.className = 'submission-note';
+-  note.setAttribute('role', 'status');
+-  note.setAttribute('aria-live', 'polite');
+-  navigation.after(note);
+-
+-  const terminal = $('#terminal-panel');
+-  terminal.querySelector('a').textContent = 'Return to student dashboard';
+-  const summary = document.createElement('div');
+-  summary.id = 'result-summary';
+-  summary.className = 'result-summary';
+-  summary.hidden = true;
+-  for (const [label, id] of [
+-    ['YOUR SCORE', 'result-score'], ['PERCENTAGE', 'result-percentage'],
+-    ['STATUS', 'result-status']
+-  ]) {
+-    const cell = document.createElement('div');
+-    const caption = document.createElement('span');
+-    caption.textContent = label;
+-    const value = document.createElement('strong');
+-    value.id = id;
+-    cell.append(caption, value);
+-    summary.append(cell);
+-  }
+-  terminal.querySelector('p').after(summary);
+-  const finalized = document.createElement('p');
+-  finalized.id = 'result-finalized';
+-  finalized.className = 'result-finalized';
+-  summary.after(finalized);
+-  const retry = document.createElement('button');
+-  retry.id = 'retry-result';
+-  retry.type = 'button';
+-  retry.className = 'outline-button';
+-  retry.textContent = 'Check result again';
+-  retry.hidden = true;
+-  finalized.after(retry);
+-
+-  const dialog = document.createElement('dialog');
+-  dialog.id = 'submit-dialog';
+-  dialog.className = 'exam-dialog submit-dialog';
+-  dialog.setAttribute('aria-labelledby', 'submit-dialog-title');
+-  dialog.innerHTML = '<p class="section-number">FINAL STEP</p>'
+-    + '<h2 id="submit-dialog-title">Ready to submit?</h2>'
+-    + '<p id="submit-summary" class="dialog-description"></p>'
+-    + '<p class="dialog-description">Your saved answers will be graded now. You cannot change them after submission.</p>'
+-    + '<div id="submit-dialog-error" class="notice error-notice" role="alert" hidden></div>'
+-    + '<div class="dialog-actions"><button id="cancel-submit" class="outline-button" type="button">Keep reviewing</button>'
+-    + '<button id="confirm-submit" class="primary-button compact-button" type="button"><span>Submit now</span></button></div>';
+-  document.body.append(dialog);
+-}
+ 
+ function readableTime(instant) {
+   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+@@ -98,7 +29,7 @@
+ function remainingSeconds() {
+   if (!state.attempt) return 0;
+   return Math.max(0, Math.ceil((Date.parse(state.attempt.deadlineAt)
+-    - (Date.now() + state.serverOffset)) / 1000));
++    - (Date.now() + state.offset)) / 1000));
+ }
+ 
+ function updateTimer() {
+@@ -128,6 +59,10 @@
+   return state.attempt?.status === 'IN_PROGRESS' && !state.timeReached;
+ }
+ 
++function hasUnsaved() {
++  return state.questions.some(question => question.saveState === 'unsaved');
++}
++
+ function renderNavigation() {
+   const list = $('#question-navigation');
+   list.replaceChildren();
+@@ -136,11 +71,11 @@
+     control.type = 'button';
+     control.textContent = String(index + 1).padStart(2, '0');
+     control.setAttribute('aria-label', `Question ${index + 1}${question.selectedOptionId == null ? ', unanswered' : ', saved answer'}`);
+-    control.setAttribute('aria-current', String(index === state.currentIndex));
++    control.setAttribute('aria-current', String(index === state.index));
+     if (question.selectedOptionId != null) control.classList.add('answered');
+     if (question.saveState === 'saving') control.classList.add('saving');
+     if (question.saveState === 'unsaved' || question.saveState === 'conflict') control.classList.add('unsaved');
+-    control.addEventListener('click', () => { state.currentIndex = index; render(); });
++    control.addEventListener('click', () => { state.index = index; render(); });
+     list.append(control);
+   }
+   const answered = state.questions.filter(question => question.selectedOptionId != null).length;
+@@ -148,9 +83,9 @@
+ }
+ 
+ function renderQuestion() {
+-  const question = state.questions[state.currentIndex];
++  const question = state.questions[state.index];
+   if (!question) return;
+-  $('#question-number').textContent = `QUESTION ${String(state.currentIndex + 1).padStart(2, '0')} / ${String(state.questions.length).padStart(2, '0')}`;
++  $('#question-number').textContent = `QUESTION ${String(state.index + 1).padStart(2, '0')} / ${String(state.questions.length).padStart(2, '0')}`;
+   $('#question-marks').textContent = `${question.marks} ${question.marks === 1 ? 'MARK' : 'MARKS'}`;
+   $('#question-title').textContent = question.text;
+   const list = $('#answer-options');
+@@ -189,8 +124,8 @@
+       : `Saved · revision ${question.revision}`;
+   }
+   $('#retry-save').hidden = question.saveState !== 'unsaved' || !canAnswer();
+-  $('#previous-question').disabled = state.currentIndex === 0;
+-  $('#next-question').disabled = state.currentIndex >= state.questions.length - 1;
++  $('#previous-question').disabled = state.index === 0;
++  $('#next-question').disabled = state.index >= state.questions.length - 1;
+ }
+ 
+ function renderTerminal() {
+@@ -229,7 +164,7 @@
+ function renderSubmission() {
+   const pendingSave = state.processing || state.pending.length
+     || state.questions.some(question => question.saveState === 'saving');
+-  const unsaved = state.questions.some(question => question.saveState === 'unsaved');
++  const unsaved = hasUnsaved();
+   $('#submit-attempt').disabled = !canAnswer() || pendingSave || unsaved || state.submitting;
+   $('#submission-note').textContent = pendingSave ? 'Saving your answer before submission...'
+     : unsaved ? 'An answer is not saved. Retry it before submitting.'
+@@ -300,7 +235,7 @@
+ async function processQueue() {
+   if (state.processing) return;
+   state.processing = true;
+-  let needsRefresh = false;
++  let reload = false;
+   while (state.pending.length) {
+     const operation = state.pending.shift();
+     const question = state.questions.find(item => item.id === operation.questionId);
+@@ -313,9 +248,9 @@
+       });
+       question.selectedOptionId = saved.selectedOptionId;
+       question.revision = saved.revision;
+-      const queuedAgain = state.pending.some(item => item.questionId === question.id);
+-      question.saveState = queuedAgain ? 'saving' : 'saved';
+-      if (!queuedAgain) question.draftSelection = saved.selectedOptionId;
++      const queued = state.pending.some(item => item.questionId === question.id);
++      question.saveState = queued ? 'saving' : 'saved';
++      if (!queued) question.draftSelection = saved.selectedOptionId;
+     } catch (error) {
+       if (error.code === 'STALE_REVISION' && error.current) {
+         question.selectedOptionId = error.current.selectedOptionId;
+@@ -337,7 +272,7 @@
+       state.pending = [];
+       if (error.code === 'ATTEMPT_EXPIRED' || error.code === 'ATTEMPT_FINALIZED') {
+         state.timeReached = true;
+-        needsRefresh = true;
++        reload = true;
+       }
+       render();
+       break;
+@@ -345,21 +280,21 @@
+     render();
+   }
+   state.processing = false;
+-  if (navigator.onLine && !state.questions.some(question => question.saveState === 'unsaved')) {
++  if (navigator.onLine && !hasUnsaved()) {
+     $('#connection-notice').hidden = true;
+   }
+   render();
+-  if (needsRefresh) loadResult();
++  if (reload) loadResult();
+ }
+ 
+ function applyAttempt(attempt) {
+-  const currentQuestionId = state.questions[state.currentIndex]?.id;
++  const questionId = state.questions[state.index]?.id;
+   state.attempt = attempt;
+-  state.serverOffset = Date.parse(attempt.serverNow) - Date.now();
++  state.offset = Date.parse(attempt.serverNow) - Date.now();
+   state.questions = [...attempt.questions].sort((a, b) => a.displayOrder - b.displayOrder)
+     .map(question => ({ ...question, draftSelection: question.selectedOptionId, saveState: 'saved' }));
+-  const previousIndex = state.questions.findIndex(question => question.id === currentQuestionId);
+-  state.currentIndex = Math.max(0, previousIndex);
++  const index = state.questions.findIndex(question => question.id === questionId);
++  state.index = Math.max(0, index);
+   state.timeReached = remainingSeconds() === 0;
+   $('#deadline-info').textContent = readableTime(attempt.deadlineAt);
+   $('#attempt-loading').hidden = true;
+@@ -371,7 +306,7 @@
+ 
+ async function refreshFromServer() {
+   if (state.processing || state.pending.length || state.refreshing
+-      || state.questions.some(question => question.saveState === 'unsaved')) return;
++      || hasUnsaved()) return;
+   state.refreshing = true;
+   try {
+     const attempt = await apiJson(`/api/attempts/${attemptId}`);
+@@ -385,14 +320,12 @@
+   }
+ }
+ 
+-setupCompletionControls();
+-
+ window.addEventListener('offline', () => {
+   $('#connection-notice').textContent = 'You appear to be offline. Answers cannot be saved until your connection returns.';
+   $('#connection-notice').hidden = false;
+ });
+ window.addEventListener('online', () => {
+-  const unsaved = state.questions.some(question => question.saveState === 'unsaved');
++  const unsaved = hasUnsaved();
+   $('#connection-notice').textContent = unsaved
+     ? 'Connection restored. Retry each unsaved answer before submitting.' : '';
+   $('#connection-notice').hidden = !unsaved;
+@@ -400,7 +333,7 @@
+ });
+ window.addEventListener('beforeunload', event => {
+   if (canAnswer() && (state.processing || state.pending.length
+-      || state.questions.some(question => question.saveState === 'unsaved'))) {
++      || hasUnsaved())) {
+     event.preventDefault();
+     event.returnValue = '';
+   }
+@@ -446,18 +379,18 @@
+ $('#retry-result').addEventListener('click', loadResult);
+ 
+ $('#clear-answer').addEventListener('click', () => {
+-  const question = state.questions[state.currentIndex];
++  const question = state.questions[state.index];
+   if (question) queueSelection(question, null);
+ });
+ $('#retry-save').addEventListener('click', () => {
+-  const question = state.questions[state.currentIndex];
++  const question = state.questions[state.index];
+   if (question?.saveState === 'unsaved') queueSelection(question, question.draftSelection);
+ });
+ $('#previous-question').addEventListener('click', () => {
+-  if (state.currentIndex > 0) { state.currentIndex--; render(); }
++  if (state.index > 0) { state.index--; render(); }
+ });
+ $('#next-question').addEventListener('click', () => {
+-  if (state.currentIndex < state.questions.length - 1) { state.currentIndex++; render(); }
++  if (state.index < state.questions.length - 1) { state.index++; render(); }
+ });
+ document.addEventListener('visibilitychange', () => {
+   if (!document.hidden && state.attempt) refreshFromServer();
+--- before/src/main/resources/static/assets/instructor.js
++++ after/src/main/resources/static/assets/instructor.js
+@@ -1,8 +1,8 @@
+ import { apiJson, currentUser } from './auth.js';
+ 
+ const $ = selector => document.querySelector(selector);
+-const state = { exams: [], exam: null, questions: [], question: null, results: [], activeAttempts: [] };
+-let selectionRevision = 0;
++const state = { exams: [], exam: null, questions: [], question: null, results: [], active: [] };
++let viewId = 0;
+ 
+ function errorMessage(error) {
+   if (error.status === 401) {
+@@ -61,11 +61,11 @@
+ }
+ 
+ function emptyDesk() {
+-  selectionRevision++;
++  viewId++;
+   state.exam = null;
+   state.questions = [];
+   state.results = [];
+-  state.activeAttempts = [];
++  state.active = [];
+   $('#recovery-section').hidden = true;
+   $('#exam-editor').hidden = true;
+   $('#desk-empty').hidden = false;
+@@ -73,13 +73,13 @@
+ }
+ 
+ function newExam() {
+-  selectionRevision++;
++  viewId++;
+   clearMessages();
+   state.exam = null;
+   state.questions = [];
+   state.question = null;
+   state.results = [];
+-  state.activeAttempts = [];
++  state.active = [];
+   $('#recovery-section').hidden = true;
+   $('#results-section').hidden = true;
+   $('#desk-empty').hidden = true;
+@@ -101,11 +101,11 @@
+ }
+ 
+ async function openExam(id) {
+-  const revision = ++selectionRevision;
++  const revision = ++viewId;
+   clearMessages();
+   try {
+     const detail = await apiJson(`/api/instructor/exams/${id}`);
+-    if (revision !== selectionRevision) return;
++    if (revision !== viewId) return;
+     state.exam = detail.exam;
+     state.questions = detail.questions;
+     state.question = null;
+@@ -137,16 +137,16 @@
+       refreshResults();
+     }
+   } catch (error) {
+-    if (revision === selectionRevision) showError(error);
++    if (revision === viewId) showError(error);
+   }
+ }
+ 
+ function renderRecovery() {
+   const list = $('#recovery-list');
+   list.replaceChildren();
+-  $('#recovery-count').textContent = String(state.activeAttempts.length).padStart(2, '0');
+-  $('#recovery-empty').hidden = state.activeAttempts.length > 0;
+-  for (const entry of state.activeAttempts) {
++  $('#recovery-count').textContent = String(state.active.length).padStart(2, '0');
++  $('#recovery-empty').hidden = state.active.length > 0;
++  for (const entry of state.active) {
+     const row = document.createElement('article');
+     row.className = 'result-row';
+     const identity = document.createElement('div');
+@@ -175,7 +175,7 @@
+   try {
+     const attempts = await apiJson(`/api/instructor/exams/${examId}/active-attempts`);
+     if (state.exam?.id !== examId) return;
+-    state.activeAttempts = attempts;
++    state.active = attempts;
+     renderRecovery();
+   } catch (error) {
+     if (state.exam?.id !== examId) return;
+--- before/src/main/resources/static/assets/student.js
++++ after/src/main/resources/static/assets/student.js
+@@ -1,7 +1,7 @@
+ import { apiJson, currentUser } from './auth.js';
+ 
+ const $ = selector => document.querySelector(selector);
+-const state = { exams: [], attempts: [], selected: null };
++const state = { exams: [], attempts: new Map(), selected: null };
+ 
+ function time(instant) {
+   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(instant));
+@@ -21,10 +21,6 @@
+   $('#student-status').hidden = true;
+ }
+ 
+-function ownAttempt(examId) {
+-  return state.attempts.find(attempt => attempt.examId === examId);
+-}
+-
+ function button(label, disabled = false) {
+   const element = document.createElement('button');
+   element.type = 'button';
+@@ -41,7 +37,7 @@
+   $('#catalog-empty').hidden = state.exams.length > 0;
+   $('#catalog-table').hidden = state.exams.length === 0;
+   for (const exam of state.exams) {
+-    const attempt = ownAttempt(exam.id);
++    const attempt = state.attempts.get(exam.id);
+     const terminal = attempt && attempt.status !== 'IN_PROGRESS';
+     const card = document.createElement('tr');
+     card.className = 'catalog-card';
+@@ -73,9 +69,7 @@
+     }
+     let action;
+     if (terminal) {
+-      action = button(`Score ${attempt.score ?? '—'} / ${attempt.totalMarks ?? exam.maximumMarks}`, true);
+-      action.disabled = false;
+-      action.textContent = `View result - ${attempt.score} / ${attempt.totalMarks}`;
++      action = button(`View result - ${attempt.score} / ${attempt.totalMarks}`);
+       action.addEventListener('click', () => {
+         window.location.assign(`/exam.html?id=${encodeURIComponent(attempt.id)}`);
+       });
+@@ -107,7 +101,7 @@
+       apiJson('/api/exams'), apiJson('/api/attempts')
+     ]);
+     state.exams = exams;
+-    state.attempts = attempts;
++    state.attempts = new Map(attempts.map(attempt => [attempt.examId, attempt]));
+     render();
+     $('#catalog-loading').hidden = true;
+   } catch (error) {
+@@ -122,7 +116,7 @@
+   clearMessages();
+   try {
+     state.selected = await apiJson(`/api/exams/${exam.id}`);
+-    const attempt = ownAttempt(exam.id);
++    const attempt = state.attempts.get(exam.id);
+     $('#dialog-title').textContent = state.selected.title;
+     $('#dialog-description').textContent = state.selected.description || 'Review the rules before beginning.';
+     $('#dialog-duration').textContent = `${state.selected.durationMinutes} minutes`;
+--- before/src/main/resources/static/exam.html
++++ after/src/main/resources/static/exam.html
+@@ -1,43 +1,82 @@
+ <!doctype html>
+ <html lang="en">
+-<head>
+-  <meta charset="utf-8">
+-  <meta name="viewport" content="width=device-width, initial-scale=1">
+-  <meta name="theme-color" content="#f3f4f6">
+-  <title>Examination · Examroom</title>
+-  <link rel="stylesheet" href="/assets/app.css">
+-  <script type="module" src="/assets/exam.js"></script>
+-</head>
+-<body class="exam-page">
+-  <div class="app-frame">
+-    <header class="exam-header">
+-      <a class="wordmark dark-wordmark" href="/student.html" aria-label="Return to student dashboard"><span class="wordmark-icon" aria-hidden="true">E</span><span>Examroom</span></a>
+-      <span class="exam-header-label">Examination in progress</span>
+-      <div class="timer-box" role="timer" aria-live="off"><span>Time remaining</span><strong id="timer">--:--</strong></div>
+-    </header>
+-    <div id="attempt-loading" class="loading-state exam-loading" role="status">Loading your examination...</div>
+-    <div id="attempt-error" class="notice error-notice exam-global-error" role="alert" hidden></div>
+-    <main id="exam-layout" class="exam-layout" hidden aria-labelledby="exam-title">
+-      <aside class="exam-sidebar" aria-label="Question navigation">
+-        <p class="section-number">Question navigation</p>
+-        <h1 id="exam-title"></h1>
+-        <p id="exam-progress" class="exam-progress"></p>
+-        <div id="question-navigation" class="question-navigation"></div>
+-        <div class="exam-sidebar-bottom"><span>Deadline</span><strong id="deadline-info"></strong><p>Your original deadline stays the same after a refresh.</p><a href="/student.html">Back to student dashboard </a></div>
+-      </aside>
+-      <section class="exam-content" aria-labelledby="question-title">
+-        <div class="exam-content-top"><span id="question-number">QUESTION 01</span><span id="question-marks"></span></div>
+-        <div id="question-panel" class="question-panel">
+-          <div class="question-heading"><p class="section-number">Select one answer</p><h2 id="question-title"></h2></div>
+-          <fieldset class="answer-fieldset"><legend class="sr-only">Answer options</legend><div id="answer-options"></div></fieldset>
+-          <div class="answer-footer"><button id="clear-answer" class="text-button-inline" type="button">Clear my answer</button><span id="save-state" class="answer-save-state" role="status" aria-live="polite">Not answered</span></div>
+-          <div id="save-error" class="notice error-notice" role="alert" hidden></div>
+-          <button id="retry-save" class="outline-button" type="button" hidden>Retry unsaved answer </button>
+-        </div>
+-        <div class="exam-navigation"><button id="previous-question" class="outline-button" type="button">← Previous</button><button id="next-question" class="primary-button compact-button" type="button"><span>Next question</span></button></div>
+-        <div id="terminal-panel" class="terminal-panel" hidden><h2>This attempt has ended.</h2><p>Your saved work and original deadline are preserved. The result will appear in your student dashboard when finalization is complete.</p><a class="outline-button" href="/student.html">Return to student dashboard </a></div>
+-      </section>
+-    </main>
+-  </div>
+-</body>
++  <head>
++    <meta charset="utf-8">
++    <meta content="width=device-width, initial-scale=1" name="viewport">
++    <meta content="#f3f4f6" name="theme-color">
++    <title>Examination · Examroom</title>
++    <link href="/assets/app.css" rel="stylesheet">
++    <script src="/assets/exam.js" type="module"></script>
++  </head>
++  <body class="exam-page">
++    <div class="app-frame">
++      <header class="exam-header">
++        <a aria-label="Return to student dashboard" class="wordmark dark-wordmark" href="/student.html"><span aria-hidden="true" class="wordmark-icon">E</span><span>Examroom</span></a>
++        <span class="exam-header-label">Examination in progress</span>
++        <div aria-live="off" class="timer-box" role="timer"><span>Time remaining</span><strong id="timer">--:--</strong></div>
++      </header>
++      <div class="loading-state exam-loading" id="attempt-loading" role="status">Loading your examination...</div>
++      <div class="notice error-notice exam-global-error" hidden id="attempt-error" role="alert"></div>
++      <div class="notice error-notice exam-global-error" hidden id="connection-notice" role="status"></div>
++      <main aria-labelledby="exam-title" class="exam-layout" hidden id="exam-layout">
++        <aside aria-label="Question navigation" class="exam-sidebar">
++          <p class="section-number">Question navigation</p>
++          <h1 id="exam-title"></h1>
++          <p class="exam-progress" id="exam-progress"></p>
++          <div class="question-navigation" id="question-navigation"></div>
++          <div class="exam-sidebar-bottom">
++            <span>Deadline</span>
++            <strong id="deadline-info"></strong>
++            <p>Your original deadline stays the same after a refresh.</p>
++            <a href="/student.html">Back to student dashboard </a>
++          </div>
++        </aside>
++        <section aria-labelledby="question-title" class="exam-content">
++          <div class="exam-content-top"><span id="question-number">QUESTION 01</span><span id="question-marks"></span></div>
++          <div class="question-panel" id="question-panel">
++            <div class="question-heading">
++              <p class="section-number">Select one answer</p>
++              <h2 id="question-title"></h2>
++            </div>
++            <fieldset class="answer-fieldset">
++              <legend class="sr-only">Answer options</legend>
++              <div id="answer-options"></div>
++            </fieldset>
++            <div class="answer-footer"><button class="text-button-inline" id="clear-answer" type="button">Clear my answer</button><span aria-live="polite" class="answer-save-state" id="save-state" role="status">Not answered</span></div>
++            <div class="notice error-notice" hidden id="save-error" role="alert"></div>
++            <button class="outline-button" hidden id="retry-save" type="button">Retry unsaved answer </button>
++          </div>
++          <div class="exam-navigation" id="exam-navigation">
++            <button class="outline-button" id="previous-question" type="button">← Previous</button>
++            <button class="primary-button compact-button" id="next-question" type="button"><span>Next question</span></button>
++            <button class="outline-button submit-attempt" id="submit-attempt" type="button">Submit examination</button>
++          </div>
++          <p aria-live="polite" class="submission-note" id="submission-note" role="status"></p>
++          <div class="terminal-panel" hidden id="terminal-panel">
++            <h2>This attempt has ended.</h2>
++            <p>Your saved work and original deadline are preserved. The result will appear in your student dashboard when finalization is complete.</p>
++            <div class="result-summary" hidden id="result-summary">
++              <div><span>YOUR SCORE</span><strong id="result-score"></strong></div>
++              <div><span>PERCENTAGE</span><strong id="result-percentage"></strong></div>
++              <div><span>STATUS</span><strong id="result-status"></strong></div>
++            </div>
++            <p class="result-finalized" id="result-finalized"></p>
++            <button class="outline-button" hidden id="retry-result" type="button">Check result again</button>
++            <a class="outline-button" href="/student.html">Return to student dashboard</a>
++          </div>
++        </section>
++      </main>
++    </div>
++    <dialog aria-labelledby="submit-dialog-title" class="exam-dialog submit-dialog" id="submit-dialog">
++      <p class="section-number">FINAL STEP</p>
++      <h2 id="submit-dialog-title">Ready to submit?</h2>
++      <p class="dialog-description" id="submit-summary"></p>
++      <p class="dialog-description">Your saved answers will be graded now. You cannot change them after submission.</p>
++      <div class="notice error-notice" hidden id="submit-dialog-error" role="alert"></div>
++      <div class="dialog-actions">
++        <button class="outline-button" id="cancel-submit" type="button">Keep reviewing</button>
++        <button class="primary-button compact-button" id="confirm-submit" type="button"><span>Submit now</span></button>
++      </div>
++    </dialog>
++  </body>
+ </html>
+--- before/src/main/resources/static/home.html
++++ after/src/main/resources/static/home.html
+@@ -1,38 +1,42 @@
+ <!doctype html>
+ <html lang="en">
+-<head>
+-  <meta charset="utf-8">
+-  <meta name="viewport" content="width=device-width, initial-scale=1">
+-  <meta name="theme-color" content="#f3f4f6">
+-  <title>Dashboard | Examroom</title>
+-  <link rel="stylesheet" href="/assets/app.css">
+-  <script type="module" src="/assets/home.js"></script>
+-</head>
+-<body class="home-page">
+-  <div class="app-frame">
+-    <header class="app-header">
+-      <a class="wordmark" href="/home.html" aria-label="Examroom dashboard"><span class="wordmark-icon" aria-hidden="true">E</span><span>Examroom</span></a>
+-      <nav class="header-nav" aria-label="Main navigation"><a href="/home.html" aria-current="page">Dashboard</a><a id="home-instructor-nav" href="/instructor.html" hidden>Examinations</a><a id="home-student-nav" href="/student.html" hidden>Examinations</a></nav>
+-      <div class="header-right"><button id="sign-out" class="outline-button" type="button" disabled>Sign out</button></div>
+-    </header>
+-    <main class="home-main" aria-labelledby="home-title">
+-      <div class="page-heading"><h1 id="home-title">Dashboard</h1><p>Welcome, <span id="display-name"></span>.</p></div>
+-      <div id="account-error" class="notice error-notice" role="alert" hidden></div>
+-      <section id="account-content" class="account-content" hidden aria-label="Account overview">
+-        <div class="account-grid">
+-          <div class="account-item"><span>Username</span><strong id="account-username"></strong></div>
+-          <div class="account-item"><span>Account role</span><strong id="account-role"></strong></div>
+-          <div class="account-item"><span>Session status</span><strong>Active</strong></div>
++  <head>
++    <meta charset="utf-8">
++    <meta content="width=device-width, initial-scale=1" name="viewport">
++    <meta content="#f3f4f6" name="theme-color">
++    <title>Dashboard | Examroom</title>
++    <link href="/assets/app.css" rel="stylesheet">
++    <script src="/assets/home.js" type="module"></script>
++  </head>
++  <body class="home-page">
++    <div class="app-frame">
++      <header class="app-header">
++        <a aria-label="Examroom dashboard" class="wordmark" href="/home.html"><span aria-hidden="true" class="wordmark-icon">E</span><span>Examroom</span></a>
++        <nav aria-label="Main navigation" class="header-nav"><a aria-current="page" href="/home.html">Dashboard</a><a hidden href="/instructor.html" id="home-instructor-nav">Examinations</a><a hidden href="/student.html" id="home-student-nav">Examinations</a></nav>
++        <div class="header-right"><button class="outline-button" disabled id="sign-out" type="button">Sign out</button></div>
++      </header>
++      <main aria-labelledby="home-title" class="home-main">
++        <div class="page-heading">
++          <h1 id="home-title">Dashboard</h1>
++          <p>Welcome, <span id="display-name"></span>.</p>
+         </div>
+-        <section class="dashboard-panel" aria-labelledby="workspace-title">
+-          <h2 id="workspace-title">Examinations</h2><p id="role-message" class="home-subtitle"></p>
+-          <a id="instructor-link" class="primary-button workspace-link" href="/instructor.html" hidden>Manage examinations</a>
+-          <a id="student-link" class="primary-button workspace-link" href="/student.html" hidden>View examinations</a>
++        <div class="notice error-notice" hidden id="account-error" role="alert"></div>
++        <section aria-label="Account overview" class="account-content" hidden id="account-content">
++          <div class="account-grid">
++            <div class="account-item"><span>Username</span><strong id="account-username"></strong></div>
++            <div class="account-item"><span>Account role</span><strong id="account-role"></strong></div>
++            <div class="account-item"><span>Session status</span><strong>Active</strong></div>
++          </div>
++          <section aria-labelledby="workspace-title" class="dashboard-panel">
++            <h2 id="workspace-title">Examinations</h2>
++            <p class="home-subtitle" id="role-message"></p>
++            <a class="primary-button workspace-link" hidden href="/instructor.html" id="instructor-link">Manage examinations</a>
++            <a class="primary-button workspace-link" hidden href="/student.html" id="student-link">View examinations</a>
++          </section>
+         </section>
+-      </section>
+-      <div id="account-loading" class="loading-state" role="status">Loading your account...</div>
+-    </main>
+-    <footer class="app-footer"><span>Online Examination System</span><span>Account dashboard</span></footer>
+-  </div>
+-</body>
++        <div class="loading-state" id="account-loading" role="status">Loading your account...</div>
++      </main>
++      <footer class="app-footer"><span>Online Examination System</span><span>Account dashboard</span></footer>
++    </div>
++  </body>
+ </html>
+--- before/src/main/resources/static/index.html
++++ after/src/main/resources/static/index.html
+@@ -1,12 +1,12 @@
+ <!doctype html>
+ <html lang="en">
+-<head>
+-  <meta charset="utf-8">
+-  <meta name="viewport" content="width=device-width, initial-scale=1">
+-  <meta http-equiv="refresh" content="0; url=/login.html">
+-  <title>Examroom</title>
+-</head>
+-<body>
+-  <p>Continue to <a href="/login.html">Examroom sign in</a>.</p>
+-</body>
++  <head>
++    <meta charset="utf-8">
++    <meta content="width=device-width, initial-scale=1" name="viewport">
++    <meta content="0; url=/login.html" http-equiv="refresh">
++    <title>Examroom</title>
++  </head>
++  <body>
++    <p>Continue to <a href="/login.html">Examroom sign in</a>.</p>
++  </body>
+ </html>
+--- before/src/main/resources/static/instructor.html
++++ after/src/main/resources/static/instructor.html
+@@ -1,80 +1,142 @@
+ <!doctype html>
+ <html lang="en">
+-<head>
+-  <meta charset="utf-8">
+-  <meta name="viewport" content="width=device-width, initial-scale=1">
+-  <meta name="theme-color" content="#f3f4f6">
+-  <title>Instructor dashboard | Examroom</title>
+-  <link rel="stylesheet" href="/assets/app.css">
+-  <script type="module" src="/assets/instructor.js"></script>
+-</head>
+-<body class="instructor-page">
+-  <div class="app-frame">
+-    <header class="app-header">
+-      <a class="wordmark" href="/home.html" aria-label="Examroom dashboard"><span class="wordmark-icon" aria-hidden="true">E</span><span>Examroom</span></a>
+-      <nav class="header-nav" aria-label="Main navigation"><a href="/home.html">Dashboard</a><a href="/instructor.html" aria-current="page">Examinations</a></nav>
+-      <div class="header-right"><span class="header-label">Instructor</span><a class="outline-button" href="/home.html">My account</a></div>
+-    </header>
+-    <main class="desk-layout" aria-labelledby="desk-title">
+-      <aside class="desk-sidebar" aria-label="Your examinations">
+-        <div class="sidebar-heading"><span>Examinations</span><span id="exam-count">00</span></div>
+-        <button id="new-exam" class="sidebar-new" type="button" disabled>Create an exam </button>
+-        <div id="exam-list" class="exam-list"></div>
+-      </aside>
+-      <section class="desk-main">
+-        <div class="page-heading"><h1 id="desk-title">Instructor dashboard</h1><p>Create examinations, manage questions, and review student results.</p></div>
+-        <div id="desk-error" class="notice error-notice" role="alert" hidden></div>
+-        <p id="desk-status" class="desk-status" role="status" aria-live="polite" hidden></p>
+-        <div id="desk-loading" class="loading-state">Loading examinations...</div>
+-        <section id="desk-empty" class="desk-empty" hidden>
+-          <h2>No examinations yet</h2>
+-          <p>Create an examination and add questions before publishing it to students.</p>
+-          <button id="empty-create" class="primary-button compact-button" type="button"><span>Create your first exam</span></button>
+-        </section>
+-        <section id="exam-editor" class="exam-editor" hidden aria-labelledby="editor-title">
+-          <div class="editor-heading">
+-            <div><p id="editor-eyebrow" class="section-number">Draft examination</p><h2 id="editor-title">New exam</h2></div>
+-            <span id="exam-status" class="status-pill">DRAFT</span>
++  <head>
++    <meta charset="utf-8">
++    <meta content="width=device-width, initial-scale=1" name="viewport">
++    <meta content="#f3f4f6" name="theme-color">
++    <title>Instructor dashboard | Examroom</title>
++    <link href="/assets/app.css" rel="stylesheet">
++    <script src="/assets/instructor.js" type="module"></script>
++  </head>
++  <body class="instructor-page">
++    <div class="app-frame">
++      <header class="app-header">
++        <a aria-label="Examroom dashboard" class="wordmark" href="/home.html"><span aria-hidden="true" class="wordmark-icon">E</span><span>Examroom</span></a>
++        <nav aria-label="Main navigation" class="header-nav"><a href="/home.html">Dashboard</a><a aria-current="page" href="/instructor.html">Examinations</a></nav>
++        <div class="header-right"><span class="header-label">Instructor</span><a class="outline-button" href="/home.html">My account</a></div>
++      </header>
++      <main aria-labelledby="desk-title" class="desk-layout">
++        <aside aria-label="Your examinations" class="desk-sidebar">
++          <div class="sidebar-heading"><span>Examinations</span><span id="exam-count">00</span></div>
++          <button class="sidebar-new" disabled id="new-exam" type="button">Create an exam </button>
++          <div class="exam-list" id="exam-list"></div>
++        </aside>
++        <section class="desk-main">
++          <div class="page-heading">
++            <h1 id="desk-title">Instructor dashboard</h1>
++            <p>Create examinations, manage questions, and review student results.</p>
+           </div>
+-          <form id="exam-form" class="editor-form">
+-            <div class="field"><label for="exam-title">Exam title</label><input id="exam-title" name="title" type="text" maxlength="200" required placeholder="e.g. Foundations of Biology"></div>
+-            <div class="field"><label for="exam-description">Description <span class="optional">optional</span></label><textarea id="exam-description" name="description" maxlength="5000" rows="3" placeholder="What should students know before they begin?"></textarea></div>
+-            <div class="form-row"><div class="field"><label for="exam-duration">Time allowed · minutes</label><input id="exam-duration" name="duration" type="number" min="1" max="10080" step="1" required value="30"></div><div class="field"><label for="exam-opens">Opens</label><input id="exam-opens" name="opens" type="datetime-local" required></div><div class="field"><label for="exam-closes">Closes</label><input id="exam-closes" name="closes" type="datetime-local" required></div></div>
+-            <div class="editor-actions"><button id="save-exam" class="primary-button compact-button" type="submit"><span>Save exam details</span></button><button id="delete-exam" class="danger-link" type="button" hidden>Delete draft</button></div>
+-          </form>
+-          <section id="paper-section" class="paper-section" hidden aria-labelledby="paper-title">
+-            <div class="paper-heading"><div><p class="section-number">Exam content</p><h2 id="paper-title">Questions <span id="question-count" class="count-mark">00</span></h2></div><button id="add-question" class="outline-button" type="button">Add question </button></div>
+-            <div id="question-list" class="question-list"></div>
+-            <p id="paper-empty" class="paper-empty">No questions added. Select Add question to build this examination.</p>
+-            <div id="question-editor" class="question-editor" hidden>
+-              <div class="question-editor-heading"><h3 id="question-editor-title">New question</h3><button id="cancel-question" class="text-button-inline" type="button">Close</button></div>
+-              <form id="question-form">
+-                <div class="field"><label for="question-text">Question</label><textarea id="question-text" rows="3" maxlength="5000" required placeholder="Write a clear, single-answer question"></textarea></div>
+-                <div class="field marks-field"><label for="question-marks">Marks</label><input id="question-marks" type="number" min="1" max="1000" step="1" required value="1"></div>
+-                <fieldset class="options-field"><legend>Answer options <span>Choose one correct answer</span></legend><div id="options-list"></div><button id="add-option" class="text-button-inline" type="button">+ Add another option</button></fieldset>
+-                <button id="save-question" class="primary-button compact-button" type="submit"><span>Save question</span></button>
+-              </form>
++          <div class="notice error-notice" hidden id="desk-error" role="alert"></div>
++          <p aria-live="polite" class="desk-status" hidden id="desk-status" role="status"></p>
++          <div class="loading-state" id="desk-loading">Loading examinations...</div>
++          <section class="desk-empty" hidden id="desk-empty">
++            <h2>No examinations yet</h2>
++            <p>Create an examination and add questions before publishing it to students.</p>
++            <button class="primary-button compact-button" id="empty-create" type="button"><span>Create your first exam</span></button>
++          </section>
++          <section aria-labelledby="editor-title" class="exam-editor" hidden id="exam-editor">
++            <div class="editor-heading">
++              <div>
++                <p class="section-number" id="editor-eyebrow">Draft examination</p>
++                <h2 id="editor-title">New exam</h2>
++              </div>
++              <span class="status-pill" id="exam-status">DRAFT</span>
+             </div>
+-            <div class="publish-band"><div><strong>Publish examination</strong><p>Publication freezes the questions, answer key, marks and timing.</p></div><button id="publish-exam" class="primary-button compact-button" type="button"><span>Publish exam</span></button></div>
+-          </section>
+-          <section id="recovery-section" class="results-section" hidden aria-labelledby="recovery-title">
+-            <div class="paper-heading"><div><p class="section-number">Active attempts</p><h2 id="recovery-title">Session recovery <span id="recovery-count" class="count-mark">00</span></h2></div><button id="refresh-recovery" class="outline-button" type="button">Refresh active attempts</button></div>
+-            <p class="paper-empty">If a student loses their session, you can end that student's old login. Their saved answers and original deadline stay in place.</p>
+-            <p id="recovery-loading" class="loading-state" hidden>Checking active attempts...</p>
+-            <div id="recovery-error" class="notice error-notice" role="alert" hidden></div>
+-            <p id="recovery-empty" class="paper-empty" hidden>No current attempts need recovery.</p>
+-            <div id="recovery-list" class="results-list"></div>
+-          </section>
+-          <section id="results-section" class="results-section" hidden aria-labelledby="results-title">
+-            <div class="paper-heading"><div><p class="section-number">Finalized attempts</p><h2 id="results-title">Student results <span id="result-count" class="count-mark">00</span></h2></div><button id="refresh-results" class="outline-button" type="button">Refresh results</button></div>
+-            <p id="results-loading" class="loading-state" hidden>Checking final results...</p>
+-            <div id="results-error" class="notice error-notice" role="alert" hidden></div>
+-            <p id="results-empty" class="paper-empty" hidden>No finalized attempts yet. Results appear here after students submit or their time expires.</p>
+-            <div id="results-list" class="results-list"></div>
++            <form class="editor-form" id="exam-form">
++              <div class="field">
++                <label for="exam-title">Exam title</label>
++                <input id="exam-title" maxlength="200" name="title" placeholder="e.g. Foundations of Biology" required type="text">
++              </div>
++              <div class="field">
++                <label for="exam-description">Description <span class="optional">optional</span></label>
++                <textarea id="exam-description" maxlength="5000" name="description" placeholder="What should students know before they begin?" rows="3"></textarea>
++              </div>
++              <div class="form-row">
++                <div class="field">
++                  <label for="exam-duration">Time allowed · minutes</label>
++                  <input id="exam-duration" max="10080" min="1" name="duration" required step="1" type="number" value="30">
++                </div>
++                <div class="field">
++                  <label for="exam-opens">Opens</label>
++                  <input id="exam-opens" name="opens" required type="datetime-local">
++                </div>
++                <div class="field">
++                  <label for="exam-closes">Closes</label>
++                  <input id="exam-closes" name="closes" required type="datetime-local">
++                </div>
++              </div>
++              <div class="editor-actions"><button class="primary-button compact-button" id="save-exam" type="submit"><span>Save exam details</span></button><button class="danger-link" hidden id="delete-exam" type="button">Delete draft</button></div>
++            </form>
++            <section aria-labelledby="paper-title" class="paper-section" hidden id="paper-section">
++              <div class="paper-heading">
++                <div>
++                  <p class="section-number">Exam content</p>
++                  <h2 id="paper-title">Questions <span class="count-mark" id="question-count">00</span></h2>
++                </div>
++                <button class="outline-button" id="add-question" type="button">Add question </button>
++              </div>
++              <div class="question-list" id="question-list"></div>
++              <p class="paper-empty" id="paper-empty">No questions added. Select Add question to build this examination.</p>
++              <div class="question-editor" hidden id="question-editor">
++                <div class="question-editor-heading">
++                  <h3 id="question-editor-title">New question</h3>
++                  <button class="text-button-inline" id="cancel-question" type="button">Close</button>
++                </div>
++                <form id="question-form">
++                  <div class="field">
++                    <label for="question-text">Question</label>
++                    <textarea id="question-text" maxlength="5000" placeholder="Write a clear, single-answer question" required rows="3"></textarea>
++                  </div>
++                  <div class="field marks-field">
++                    <label for="question-marks">Marks</label>
++                    <input id="question-marks" max="1000" min="1" required step="1" type="number" value="1">
++                  </div>
++                  <fieldset class="options-field">
++                    <legend>Answer options <span>Choose one correct answer</span></legend>
++                    <div id="options-list"></div>
++                    <button class="text-button-inline" id="add-option" type="button">+ Add another option</button>
++                  </fieldset>
++                  <button class="primary-button compact-button" id="save-question" type="submit"><span>Save question</span></button>
++                </form>
++              </div>
++              <div class="publish-band">
++                <div>
++                  <strong>Publish examination</strong>
++                  <p>Publication freezes the questions, answer key, marks and timing.</p>
++                </div>
++                <button class="primary-button compact-button" id="publish-exam" type="button"><span>Publish exam</span></button>
++              </div>
++            </section>
++            <section aria-labelledby="recovery-title" class="results-section" hidden id="recovery-section">
++              <div class="paper-heading">
++                <div>
++                  <p class="section-number">Active attempts</p>
++                  <h2 id="recovery-title">Session recovery <span class="count-mark" id="recovery-count">00</span></h2>
++                </div>
++                <button class="outline-button" id="refresh-recovery" type="button">Refresh active attempts</button>
++              </div>
++              <p class="paper-empty">If a student loses their session, you can end that student's old login. Their saved answers and original deadline stay in place.</p>
++              <p class="loading-state" hidden id="recovery-loading">Checking active attempts...</p>
++              <div class="notice error-notice" hidden id="recovery-error" role="alert"></div>
++              <p class="paper-empty" hidden id="recovery-empty">No current attempts need recovery.</p>
++              <div class="results-list" id="recovery-list"></div>
++            </section>
++            <section aria-labelledby="results-title" class="results-section" hidden id="results-section">
++              <div class="paper-heading">
++                <div>
++                  <p class="section-number">Finalized attempts</p>
++                  <h2 id="results-title">Student results <span class="count-mark" id="result-count">00</span></h2>
++                </div>
++                <button class="outline-button" id="refresh-results" type="button">Refresh results</button>
++              </div>
++              <p class="loading-state" hidden id="results-loading">Checking final results...</p>
++              <div class="notice error-notice" hidden id="results-error" role="alert"></div>
++              <p class="paper-empty" hidden id="results-empty">No finalized attempts yet. Results appear here after students submit or their time expires.</p>
++              <div class="results-list" id="results-list"></div>
++            </section>
+           </section>
+         </section>
+-      </section>
+-    </main>
+-  </div>
+-</body>
++      </main>
++    </div>
++  </body>
+ </html>
+--- before/src/main/resources/static/login.html
++++ after/src/main/resources/static/login.html
+@@ -1,32 +1,35 @@
+ <!doctype html>
+ <html lang="en">
+-<head>
+-  <meta charset="utf-8">
+-  <meta name="viewport" content="width=device-width, initial-scale=1">
+-  <meta name="theme-color" content="#f3f4f6">
+-  <title>Sign in | Examroom</title>
+-  <link rel="stylesheet" href="/assets/app.css">
+-  <script type="module" src="/assets/login.js"></script>
+-</head>
+-<body class="login-page">
+-  <main class="login-shell">
+-    <section class="form-panel" aria-labelledby="login-title">
+-      <a class="wordmark login-brand" href="/login.html"><span class="wordmark-icon" aria-hidden="true">E</span><span>Examroom</span></a>
+-      <div class="form-content">
+-        <h1 id="login-title">Sign in</h1>
+-        <p class="form-intro">Enter your account details to access the examination system.</p>
+-        <div id="login-error" class="notice error-notice" role="alert" hidden></div>
+-        <form id="login-form" novalidate>
+-          <div class="field"><label for="username">Username</label><input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="80" placeholder="Enter your username"></div>
+-          <div class="field">
+-            <label for="password">Password</label>
+-            <div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Enter your password"><button id="toggle-password" class="text-button" type="button" aria-label="Show password" aria-pressed="false">Show</button></div>
+-          </div>
+-          <button id="sign-in" class="primary-button" type="submit"><span>Sign in</span></button>
+-        </form>
+-        <p class="help-copy">For account access or password assistance, contact your instructor or exam coordinator.</p>
+-      </div>
+-    </section>
+-  </main>
+-</body>
++  <head>
++    <meta charset="utf-8">
++    <meta content="width=device-width, initial-scale=1" name="viewport">
++    <meta content="#f3f4f6" name="theme-color">
++    <title>Sign in | Examroom</title>
++    <link href="/assets/app.css" rel="stylesheet">
++    <script src="/assets/login.js" type="module"></script>
++  </head>
++  <body class="login-page">
++    <main class="login-shell">
++      <section aria-labelledby="login-title" class="form-panel">
++        <a class="wordmark login-brand" href="/login.html"><span aria-hidden="true" class="wordmark-icon">E</span><span>Examroom</span></a>
++        <div class="form-content">
++          <h1 id="login-title">Sign in</h1>
++          <p class="form-intro">Enter your account details to access the examination system.</p>
++          <div class="notice error-notice" hidden id="login-error" role="alert"></div>
++          <form id="login-form" novalidate="">
++            <div class="field">
++              <label for="username">Username</label>
++              <input autocapitalize="none" autocomplete="username" id="username" maxlength="80" name="username" placeholder="Enter your username" required spellcheck="false" type="text">
++            </div>
++            <div class="field">
++              <label for="password">Password</label>
++              <div class="password-wrap"><input autocomplete="current-password" id="password" name="password" placeholder="Enter your password" required type="password"><button aria-label="Show password" aria-pressed="false" class="text-button" id="toggle-password" type="button">Show</button></div>
++            </div>
++            <button class="primary-button" id="sign-in" type="submit"><span>Sign in</span></button>
++          </form>
++          <p class="help-copy">For account access or password assistance, contact your instructor or exam coordinator.</p>
++        </div>
++      </section>
++    </main>
++  </body>
+ </html>
+--- before/src/main/resources/static/student.html
++++ after/src/main/resources/static/student.html
+@@ -1,42 +1,72 @@
+ <!doctype html>
+ <html lang="en">
+-<head>
+-  <meta charset="utf-8">
+-  <meta name="viewport" content="width=device-width, initial-scale=1">
+-  <meta name="theme-color" content="#f3f4f6">
+-  <title>Student dashboard | Examroom</title>
+-  <link rel="stylesheet" href="/assets/app.css">
+-  <script type="module" src="/assets/student.js"></script>
+-</head>
+-<body class="student-page">
+-  <div class="app-frame">
+-    <header class="app-header">
+-      <a class="wordmark" href="/home.html" aria-label="Examroom dashboard"><span class="wordmark-icon" aria-hidden="true">E</span><span>Examroom</span></a>
+-      <nav class="header-nav" aria-label="Main navigation"><a href="/home.html">Dashboard</a><a href="/student.html" aria-current="page">Examinations</a></nav>
+-      <div class="header-right"><span class="header-label">Student</span><a class="outline-button" href="/home.html">My account</a></div>
+-    </header>
+-    <main class="student-main" aria-labelledby="student-title">
+-      <section class="student-intro"><h1 id="student-title">Student dashboard</h1><p>View available examinations, continue saved attempts, and check your results.</p></section>
+-      <div id="student-error" class="notice error-notice" role="alert" hidden></div>
+-      <p id="student-status" class="desk-status" role="status" aria-live="polite" hidden></p>
+-      <section class="catalog-section" aria-labelledby="catalog-title">
+-        <div class="catalog-heading"><h2 id="catalog-title">Examinations <span id="catalog-count" class="count-mark">00</span></h2><button id="refresh-catalog" class="outline-button" type="button">Refresh list</button></div>
+-        <div id="catalog-loading" class="loading-state" role="status">Loading examinations...</div>
+-        <div id="catalog-table" class="catalog-table-wrap" hidden>
+-          <table class="catalog-table"><caption class="sr-only">Published examinations and your attempt status</caption><thead><tr><th scope="col">Examination</th><th scope="col">Details</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead><tbody id="catalog-list"></tbody></table>
+-        </div>
+-        <p id="catalog-empty" class="catalog-empty" hidden>No examinations have been published yet. Check back with your instructor.</p>
+-      </section>
+-    </main>
+-    <footer class="app-footer"><span>Online Examination System</span><span>Student dashboard</span></footer>
+-  </div>
+-  <dialog id="exam-dialog" class="exam-dialog" aria-labelledby="dialog-title">
+-    <div class="dialog-top"><span>Exam instructions</span><button id="close-dialog" type="button" aria-label="Close exam instructions">&times;</button></div>
+-    <h2 id="dialog-title"></h2><p id="dialog-description" class="dialog-description"></p>
+-    <dl class="dialog-facts"><div><dt>Time allowed</dt><dd id="dialog-duration"></dd></div><div><dt>Questions</dt><dd id="dialog-questions"></dd></div><div><dt>Maximum marks</dt><dd id="dialog-marks"></dd></div><div><dt>Closes</dt><dd id="dialog-closes"></dd></div></dl>
+-    <div class="dialog-rules"><h3>Exam rules</h3><ol><li>Your time limit is set by the server when you first start. Refreshing will not restart it.</li><li>Choose one answer for each question. You can change or clear answers before the deadline.</li><li>Submit when you are finished. The system also finalizes the attempt when time runs out.</li></ol></div>
+-    <div id="dialog-error" class="notice error-notice" role="alert" hidden></div>
+-    <div class="dialog-actions"><button id="dialog-cancel" class="outline-button" type="button">Cancel</button><button id="dialog-start" class="primary-button" type="button"><span>Start exam</span></button></div>
+-  </dialog>
+-</body>
++  <head>
++    <meta charset="utf-8">
++    <meta content="width=device-width, initial-scale=1" name="viewport">
++    <meta content="#f3f4f6" name="theme-color">
++    <title>Student dashboard | Examroom</title>
++    <link href="/assets/app.css" rel="stylesheet">
++    <script src="/assets/student.js" type="module"></script>
++  </head>
++  <body class="student-page">
++    <div class="app-frame">
++      <header class="app-header">
++        <a aria-label="Examroom dashboard" class="wordmark" href="/home.html"><span aria-hidden="true" class="wordmark-icon">E</span><span>Examroom</span></a>
++        <nav aria-label="Main navigation" class="header-nav"><a href="/home.html">Dashboard</a><a aria-current="page" href="/student.html">Examinations</a></nav>
++        <div class="header-right"><span class="header-label">Student</span><a class="outline-button" href="/home.html">My account</a></div>
++      </header>
++      <main aria-labelledby="student-title" class="student-main">
++        <section class="student-intro">
++          <h1 id="student-title">Student dashboard</h1>
++          <p>View available examinations, continue saved attempts, and check your results.</p>
++        </section>
++        <div class="notice error-notice" hidden id="student-error" role="alert"></div>
++        <p aria-live="polite" class="desk-status" hidden id="student-status" role="status"></p>
++        <section aria-labelledby="catalog-title" class="catalog-section">
++          <div class="catalog-heading">
++            <h2 id="catalog-title">Examinations <span class="count-mark" id="catalog-count">00</span></h2>
++            <button class="outline-button" id="refresh-catalog" type="button">Refresh list</button>
++          </div>
++          <div class="loading-state" id="catalog-loading" role="status">Loading examinations...</div>
++          <div class="catalog-table-wrap" hidden id="catalog-table">
++            <table class="catalog-table">
++              <caption class="sr-only">Published examinations and your attempt status</caption>
++              <thead>
++                <tr>
++                  <th scope="col">Examination</th>
++                  <th scope="col">Details</th>
++                  <th scope="col">Status</th>
++                  <th scope="col">Action</th>
++                </tr>
++              </thead>
++              <tbody id="catalog-list"></tbody>
++            </table>
++          </div>
++          <p class="catalog-empty" hidden id="catalog-empty">No examinations have been published yet. Check back with your instructor.</p>
++        </section>
++      </main>
++      <footer class="app-footer"><span>Online Examination System</span><span>Student dashboard</span></footer>
++    </div>
++    <dialog aria-labelledby="dialog-title" class="exam-dialog" id="exam-dialog">
++      <div class="dialog-top"><span>Exam instructions</span><button aria-label="Close exam instructions" id="close-dialog" type="button">×</button></div>
++      <h2 id="dialog-title"></h2>
++      <p class="dialog-description" id="dialog-description"></p>
++      <dl class="dialog-facts">
++        <div><dt>Time allowed</dt><dd id="dialog-duration"></dd></div>
++        <div><dt>Questions</dt><dd id="dialog-questions"></dd></div>
++        <div><dt>Maximum marks</dt><dd id="dialog-marks"></dd></div>
++        <div><dt>Closes</dt><dd id="dialog-closes"></dd></div>
++      </dl>
++      <div class="dialog-rules">
++        <h3>Exam rules</h3>
++        <ol>
++          <li>Your time limit is set by the server when you first start. Refreshing will not restart it.</li>
++          <li>Choose one answer for each question. You can change or clear answers before the deadline.</li>
++          <li>Submit when you are finished. The system also finalizes the attempt when time runs out.</li>
++        </ol>
++      </div>
++      <div class="notice error-notice" hidden id="dialog-error" role="alert"></div>
++      <div class="dialog-actions"><button class="outline-button" id="dialog-cancel" type="button">Cancel</button><button class="primary-button" id="dialog-start" type="button"><span>Start exam</span></button></div>
++    </dialog>
++  </body>
+ </html>
+--- before/src/test/java/com/onlineexam/RepositoryIT.java
++++ after/src/test/java/com/onlineexam/RepositoryIT.java
+@@ -158,6 +158,37 @@
+     }
+ 
+     @Test
++    void paperQueriesKeepExamScopeAndOptionOrder() {
++        transactions.executeWithoutResult(transaction -> {
++            long teacher = users.create(user("batch_" + UUID.randomUUID(), Role.INSTRUCTOR));
++            long exam = exams.create(exam(teacher, "Batch paper", ExamStatus.DRAFT, null));
++            long other = exams.create(exam(teacher, "Other paper", ExamStatus.DRAFT, null));
++            long first = questions.create(new Question(0, exam, "First", 2, 0));
++            long second = questions.create(new Question(0, exam, "Second", 5, 1));
++            long foreign = questions.create(new Question(0, other, "Other", 9, 0));
++            options.create(new QuestionOption(0, first, "Later", false, 1));
++            options.create(new QuestionOption(0, first, "Earlier", true, 0));
++            options.create(new QuestionOption(0, second, "Second choice", true, 0));
++            options.create(new QuestionOption(0, foreign, "Other choice", true, 0));
++
++            var choices = options.findByExam(exam);
++            assertThat(choices).containsOnlyKeys(first, second);
++            assertThat(choices.get(first)).extracting(QuestionOption::text)
++                    .containsExactly("Earlier", "Later");
++            assertThat(choices.get(second)).extracting(QuestionOption::text)
++                    .containsExactly("Second choice");
++            assertThat(options.findByExam(Long.MAX_VALUE)).isEmpty();
++            var stats = questions.statsByExam();
++            assertThat(stats.get(exam)).isEqualTo(new QuestionRepository.Stats(2, 7));
++            assertThat(stats.get(other)).isEqualTo(new QuestionRepository.Stats(1, 9));
++            assertThat(questions.stats(exam)).isEqualTo(new QuestionRepository.Stats(2, 7));
++            assertThat(questions.stats(other)).isEqualTo(new QuestionRepository.Stats(1, 9));
++            assertThat(questions.stats(Long.MAX_VALUE)).isEqualTo(new QuestionRepository.Stats(0, 0));
++            transaction.setRollbackOnly();
++        });
++    }
++
++    @Test
+     void draftDeleteCascadesAndExplicitRollbackLeavesNoFixture() {
+         String username = "rollback_" + UUID.randomUUID().toString().replace("-", "");
+         transactions.executeWithoutResult(transaction -> {
+--- before/tools/check_dashboard_layouts.py
++++ after/tools/check_dashboard_layouts.py
+@@ -1,23 +1,10 @@
+ """Inspect dashboard layouts against the configured disposable browser server."""
+ 
+-import os
+ import re
+-import subprocess
+-from pathlib import Path
+-from urllib.parse import urlparse
+ 
+ from playwright.sync_api import expect, sync_playwright
++from browser_support import base as BASE, browser as BROWSER, evidence, password as PASSWORD
+ 
+-ROOT = Path(__file__).resolve().parent.parent
+-assert urlparse(os.environ["DB_URL"].removeprefix("jdbc:")).path == "/online_exam_e2e", (
+-    "Run this check only against the disposable online_exam_e2e server"
+-)
+-BASE = "http://127.0.0.1:8080"
+-PASSWORD = (ROOT / ".local/demo-password.txt").read_text(encoding="utf-8").strip()
+-BROWSER = subprocess.check_output(
+-    ["node", "-e", "console.log(require('./e2e/node_modules/playwright').chromium.executablePath())"],
+-    cwd=ROOT, text=True,
+-).strip()
+ errors = []
+ inspected = []
+ 
+@@ -33,7 +20,7 @@
+         return ids.filter((id, index) => ids.indexOf(id) !== index);
+     }""")
+     assert not duplicates, f"Duplicate control IDs: {duplicates}"
+-    page.screenshot(path=str(ROOT / "evidence" / f"dashboard-{name}-{width}.png"), full_page=True)
++    page.screenshot(path=evidence(f"{name}-{width}", "dashboard"), full_page=True)
+     inspected.append(f"{name} {width}px")
+ 
+ 
+@@ -106,4 +93,4 @@
+ 
+ print(f"PASS: {len(inspected)} dashboard views at 1440px/360px; no horizontal clipping, "
+       "duplicate control IDs or page errors; labeled keyboard login, visible focus, role navigation, "
+-      "exam table, instructor forms and persisted results work. Screenshots saved under evidence/dashboard-*.png.")
++      "exam table, instructor forms and persisted results work. Screenshots saved under evidence/.")
+--- before/tools/check_keyboard_offline_ui.py
++++ after/tools/check_keyboard_offline_ui.py
+@@ -1,13 +1,10 @@
+ from datetime import datetime, timedelta, timezone
+-from pathlib import Path
+ from uuid import uuid4
+ import re
+ import requests
+ from playwright.sync_api import sync_playwright, expect
++from browser_support import base, browser as browser_path, evidence, password
+ 
+-root = Path(__file__).resolve().parent.parent
+-password = (root / '.local' / 'demo-password.txt').read_text(encoding='utf-8').strip()
+-base = 'http://127.0.0.1:8080'
+ title = 'Keyboard offline ' + uuid4().hex[:8]
+ errors = []
+ 
+@@ -43,7 +40,7 @@
+ assert author.post(base + f'/api/exams/{exam_id}/publish', headers=csrf(), timeout=10).status_code == 200
+ 
+ with sync_playwright() as playwright:
+-    browser = playwright.chromium.launch(headless=True)
++    browser = playwright.chromium.launch(headless=True, executable_path=browser_path)
+     context = browser.new_context(viewport={'width': 1440, 'height': 900})
+     page = context.new_page()
+     page.on('pageerror', lambda error: errors.append(str(error)))
+@@ -93,7 +90,7 @@
+ 
+     page.set_viewport_size({'width': 360, 'height': 780})
+     assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
+-    page.screenshot(path=str(root / 'evidence' / 'p07-04-keyboard-exam-mobile.png'), full_page=True)
++    page.screenshot(path=evidence('keyboard-exam-mobile', 'p07-04'), full_page=True)
+     page.locator('#next-question').focus()
+     page.keyboard.press('Enter')
+     context.set_offline(True)
+@@ -108,7 +105,7 @@
+     page.evaluate("window.dispatchEvent(new Event('focus'))")
+     expect(second_wrong).to_be_checked()
+     expect(page.locator('#save-state')).to_contain_text('Not saved')
+-    page.screenshot(path=str(root / 'evidence' / 'p07-04-offline-unsaved-mobile.png'), full_page=True)
++    page.screenshot(path=evidence('offline-unsaved-mobile', 'p07-04'), full_page=True)
+ 
+     context.set_offline(False)
+     expect(page.locator('#connection-notice')).to_contain_text('Retry each unsaved')
+@@ -128,8 +125,11 @@
+     page.keyboard.press('Enter')
+     expect(page.locator('#result-score')).to_have_text('2 / 5')
+     assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
+-    page.screenshot(path=str(root / 'evidence' / 'p07-04-keyboard-result-mobile.png'), full_page=True)
++    page.screenshot(path=evidence('keyboard-result-mobile', 'p07-04'), full_page=True)
+     assert not errors, errors
++    page.goto(base + '/home.html')
++    page.locator('#sign-out').click()
++    expect(page).to_have_url(base + '/login.html')
+     browser.close()
+ 
+ print('PASS: keyboard-only login/exam/navigation/submit, focus retained after render, 360px layout, offline unsaved warning and disabled submit, reconnect/retry to acknowledged MySQL save, no page errors or overflow')
+--- before/tools/check_resilience_browser.py
++++ after/tools/check_resilience_browser.py
+@@ -1,5 +1,4 @@
+ from datetime import datetime, timedelta, timezone
+-from pathlib import Path
+ from uuid import uuid4
+ import os
+ import re
+@@ -8,9 +7,8 @@
+ 
+ import requests
+ from playwright.sync_api import expect, sync_playwright
++from browser_support import base, browser as browser_path, evidence, password, root
+ 
+-root = Path(__file__).resolve().parent.parent
+-password = (root / '.local' / 'demo-password.txt').read_text(encoding='utf-8').strip()
+ settings = {}
+ for line in (root / '.env').read_text(encoding='utf-8').splitlines():
+     if '=' in line and not line.startswith('#'):
+@@ -18,7 +16,6 @@
+         settings[key] = value
+ mysql_env = os.environ.copy()
+ mysql_env['MYSQL_PWD'] = settings['MYSQL_PASSWORD']
+-base = 'http://127.0.0.1:8080'
+ title = 'Resilience journey ' + uuid4().hex[:8]
+ errors = []
+ 
+@@ -86,7 +83,7 @@
+ 
+ 
+ with sync_playwright() as playwright:
+-    browser = playwright.chromium.launch(headless=True)
++    browser = playwright.chromium.launch(headless=True, executable_path=browser_path)
+     context, page, attempt_id = start_attempt(browser, 'demo_student3')
+     cdp = context.new_cdp_session(page)
+     cdp.send('Network.enable')
+@@ -109,7 +106,7 @@
+     expect(page.locator('#submit-attempt')).to_be_disabled()
+     context.set_offline(True)
+     expect(page.locator('#connection-notice')).to_contain_text('offline')
+-    page.screenshot(path=str(root / 'evidence' / 'p08-04-unsaved-browser.png'), full_page=True)
++    page.screenshot(path=evidence('unsaved-browser', 'p08-04'), full_page=True)
+     context.set_offline(False)
+     page.unroute('**/api/attempts/*/answers/*')
+     page.locator('#retry-save').click()
+@@ -121,7 +118,7 @@
+     expect(page.locator('#result-score')).to_have_text('0 / 2', timeout=15000)
+     assert context.request.get(base + f'/api/attempts/{attempt_id}/result').json()['status'] == 'TIMED_OUT'
+     assert db(f'SELECT revision FROM answers WHERE attempt_id = {attempt_id}') == '2'
+-    page.screenshot(path=str(root / 'evidence' / 'p08-04-expired-browser.png'), full_page=True)
++    page.screenshot(path=evidence('expired-browser', 'p08-04'), full_page=True)
+     context.close()
+ 
+     closed_context, closed_page, closed_attempt = start_attempt(browser, 'demo_student1')
+--- before/tools/check_restart_recovery.ps1
++++ after/tools/check_restart_recovery.ps1
+@@ -6,12 +6,24 @@
+         $settings[$pair[0]] = $pair[1]
+     }
+ }
+-$env:JAVA_HOME = (Resolve-Path '.local\jdk\jdk-21.0.12.1+1').Path
++if (-not $env:JAVA_HOME) { throw 'Set JAVA_HOME to your Java 21 JDK.' }
+ $env:DB_URL = 'jdbc:mysql://127.0.0.1:3307/online_exam_e2e?connectionTimeZone=UTC'
+ $env:DB_USER = 'online_exam'
+ $env:DB_PASSWORD = $settings['MYSQL_PASSWORD']
+ $env:DEMO_PASSWORD = (Get-Content -LiteralPath '.local\demo-password.txt' -Raw).Trim()
+ $env:DEBUG = 'false'
++$port = 8080
++if ($env:E2E_PORT) { $port = [int]$env:E2E_PORT }
++if ($port -lt 1024 -or $port -gt 65535) { throw 'Invalid E2E_PORT' }
++$env:PORT = $port.ToString()
++$url = "http://127.0.0.1:$port"
++$probe = New-Object System.Net.Sockets.TcpClient
++try {
++    try { $probe.Connect('127.0.0.1', $port) } catch [System.Net.Sockets.SocketException] {
++        if ($_.Exception.SocketErrorCode -ne [System.Net.Sockets.SocketError]::ConnectionRefused) { throw }
++    }
++    if ($probe.Connected) { throw 'Test port is occupied; select a free E2E_PORT.' }
++} finally { $probe.Dispose() }
+ $script:appProcess = $null
+ $script:startCount = 0
+ 
+@@ -19,15 +31,16 @@
+     $script:startCount++
+     $suffix = $script:startCount
+     $script:appProcess = Start-Process -FilePath "$env:JAVA_HOME\bin\java.exe" -ArgumentList @(
+-        '-jar', 'target/online-exam-0.1.0-SNAPSHOT.jar', '--spring.profiles.active=demo'
++        '-jar', 'target/online-exam-0.1.0-SNAPSHOT.jar', '--spring.profiles.active=demo',
++        '--server.address=127.0.0.1'
+     ) -PassThru -WindowStyle Hidden -RedirectStandardOutput ".local/p08-04-restart-$suffix.log" `
+         -RedirectStandardError ".local/p08-04-restart-$suffix-error.log"
+     $ready = $false
+     for ($i = 0; $i -lt 90; $i++) {
++        if ($script:appProcess.HasExited) { throw 'Isolated test app exited before readiness.' }
+         try {
+-            $response = Invoke-WebRequest -Uri 'http://127.0.0.1:8080/api/ready' `
+-                -UseBasicParsing -TimeoutSec 2
+-            if ($response.StatusCode -eq 200) { $ready = $true; break }
++            $response = Invoke-RestMethod -Uri "$url/api/ready" -TimeoutSec 2
++            if ($response.status -eq 'UP') { $ready = $true; break }
+         } catch { }
+         Start-Sleep -Seconds 1
+     }
+--- before/tools/check_restart_recovery.py
++++ after/tools/check_restart_recovery.py
+@@ -5,10 +5,15 @@
+ import os
+ import subprocess
+ import sys
++from urllib.parse import urlparse
+ 
+ import requests
+ 
+ root = Path(__file__).resolve().parent.parent
++url = os.environ.get('DB_URL', '')
++assert url.startswith('jdbc:mysql://') and urlparse(url[5:]).path == '/online_exam_e2e', (
++    'Restart checks require the disposable online_exam_e2e database'
++)
+ fixture_path = root / '.local' / 'p08-04-restart-fixtures.json'
+ password = (root / '.local' / 'demo-password.txt').read_text(encoding='utf-8').strip()
+ settings = {}
+@@ -18,7 +23,9 @@
+         settings[key] = value
+ mysql_env = os.environ.copy()
+ mysql_env['MYSQL_PWD'] = settings['MYSQL_PASSWORD']
+-base = 'http://127.0.0.1:8080'
++port = int(os.environ.get('E2E_PORT', '8080'))
++assert 1024 <= port <= 65535, 'Invalid E2E_PORT'
++base = f'http://127.0.0.1:{port}'
+ 
+ 
+ def db(sql):
+--- before/tools/check_safe_text_ui.py
++++ after/tools/check_safe_text_ui.py
+@@ -1,14 +1,11 @@
+ from datetime import datetime, timedelta, timezone
+-from pathlib import Path
+ from uuid import uuid4
+ import re
+ 
+ import requests
+ from playwright.sync_api import expect, sync_playwright
++from browser_support import base, browser as browser_path, evidence, password
+ 
+-root = Path(__file__).resolve().parent.parent
+-password = (root / '.local' / 'demo-password.txt').read_text(encoding='utf-8').strip()
+-base = 'http://127.0.0.1:8080'
+ marker = uuid4().hex[:8]
+ malicious = f'<img src=x onerror="window.examInjected=true"> {marker} \' OR 1=1 --'
+ description = f'<script>window.examInjected=true</script> {marker}'
+@@ -73,7 +70,7 @@
+ 
+ 
+ with sync_playwright() as playwright:
+-    browser = playwright.chromium.launch(headless=True)
++    browser = playwright.chromium.launch(headless=True, executable_path=browser_path)
+     instructor = browser.new_context(viewport={'width': 1440, 'height': 900})
+     teacher = instructor.new_page()
+     teacher.on('pageerror', lambda error: errors.append(str(error)))
+@@ -110,8 +107,11 @@
+     expect(page.locator('#question-title')).to_have_text(malicious)
+     expect(page.locator('#answer-options .answer-option span').first).to_have_text(malicious)
+     assert_plain_text(page)
+-    page.screenshot(path=str(root / 'evidence' / 'p08-02-safe-text-student.png'), full_page=True)
++    page.screenshot(path=evidence('safe-text-student', 'p08-02'), full_page=True)
+     assert not errors, errors
++    page.goto(base + '/home.html')
++    page.locator('#sign-out').click()
++    expect(page).to_have_url(base + '/login.html')
+     browser.close()
+ 
+ print('PASS: SQL-like login was denied; malicious exam text persisted as data and rendered literally on instructor/student screens; CSP, bounded input and safe validation errors passed')
+--- before/tools/rehearse_clean_setup_backup.py
++++ after/tools/rehearse_clean_setup_backup.py
+@@ -8,6 +8,7 @@
+ import os
+ from pathlib import Path
+ import shutil
++import socket
+ import subprocess
+ import sys
+ import time
+@@ -35,6 +36,9 @@
+ 
+ 
+ SETTINGS = private_settings()
++PORT = int(os.environ.get("E2E_PORT", "8080"))
++assert 1024 <= PORT <= 65535, "Invalid E2E_PORT"
++BASE = f"http://127.0.0.1:{PORT}"
+ 
+ 
+ def docker_mysql(user, sql, *, database=None, input_bytes=None, dump=False, extra=()):
+@@ -70,12 +74,13 @@
+ 
+ def clean_build_and_start(destination):
+     env = os.environ.copy()
+-    java_home = ROOT / ".local" / "jdk" / "jdk-21.0.12.1+1"
++    java_home = Path(os.environ.get("JAVA_HOME") or ROOT / ".local/jdk/jdk-21.0.12.1+1")
+     env.update(JAVA_HOME=str(java_home), DB_URL=f"jdbc:mysql://127.0.0.1:3307/{CLEAN_DB}?connectionTimeZone=UTC",
+-               DB_USER="online_exam", DB_PASSWORD=SETTINGS["MYSQL_PASSWORD"], DEBUG="false")
++               DB_USER="online_exam", DB_PASSWORD=SETTINGS["MYSQL_PASSWORD"], DEBUG="false", PORT=str(PORT))
+     maven = [str(destination / ("mvnw.cmd" if os.name == "nt" else "mvnw")),
+              "-B", "-ntp", f"-Dmaven.repo.local={LOCAL / 'm2'}", "clean", "package"]
+-    build_log = ROOT / "evidence" / "p10-02-clean-build.log"
++    prefix = os.environ.get("EVIDENCE_PREFIX", "p10-02")
++    build_log = ROOT / "evidence" / f"{prefix}-clean-build.log"
+     with build_log.open("wb") as output:
+         done = subprocess.run(maven, cwd=destination, env=env, stdout=output,
+                               stderr=subprocess.STDOUT)
+@@ -87,7 +92,7 @@
+     app_log = LOCAL / "p10-02-clean-app.log"
+     with app_log.open("wb") as output:
+         process = subprocess.Popen([str(java_home / "bin" / ("java.exe" if os.name == "nt" else "java")),
+-                                    "-jar", str(jar)], cwd=destination, env=env,
++                                    "-jar", str(jar), "--server.address=127.0.0.1"], cwd=destination, env=env,
+                                    stdout=output, stderr=subprocess.STDOUT,
+                                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+         try:
+@@ -95,14 +100,14 @@
+                 if process.poll() is not None:
+                     raise RuntimeError(f"clean app exited early ({process.returncode}); inspect {app_log.name}")
+                 try:
+-                    with urllib.request.urlopen("http://127.0.0.1:8080/api/ready", timeout=2) as response:
++                    with urllib.request.urlopen(BASE + "/api/ready", timeout=2) as response:
+                         if response.status == 200:
+                             break
+                 except Exception:
+                     time.sleep(1)
+             else:
+                 raise RuntimeError("clean app did not become ready")
+-            with urllib.request.urlopen("http://127.0.0.1:8080/login.html", timeout=5) as response:
++            with urllib.request.urlopen(BASE + "/login.html", timeout=5) as response:
+                 if response.status != 200 or b"Examroom" not in response.read():
+                     raise RuntimeError("clean app did not serve login page")
+             version = docker_mysql("online_exam", "SELECT version FROM flyway_schema_history "
+@@ -146,6 +151,8 @@
+ 
+ 
+ def main():
++    with socket.socket() as probe:
++        assert probe.connect_ex(("127.0.0.1", PORT)) != 0, "Test port is occupied; select a free E2E_PORT"
+     create_disposable_database(CLEAN_DB)
+     destination = copy_source()
+     jar_hash = clean_build_and_start(destination)
+--- before/tools/run_dashboard_checks.py
++++ after/tools/run_dashboard_checks.py
+@@ -24,8 +24,11 @@
+ assert jar.is_file(), "Build the packaged application first"
+ java = str(Path(os.environ["JAVA_HOME"]) / "bin/java.exe") if os.environ.get("JAVA_HOME") else shutil.which("java")
+ assert java, "Java 21 required"
++port = int(os.environ.get("E2E_PORT", "8080"))
++assert 1024 <= port <= 65535, "Invalid E2E_PORT"
++base = f"http://127.0.0.1:{port}"
+ with socket.socket() as probe:
+-    assert probe.connect_ex(("127.0.0.1", 8080)) != 0, "Stop the local app before these isolated checks"
++    assert probe.connect_ex(("127.0.0.1", port)) != 0, "Test port is occupied; select a free E2E_PORT"
+ browser_path = subprocess.check_output(
+     ["node", "-e", "console.log(require('./e2e/node_modules/playwright').chromium.executablePath())"],
+     cwd=ROOT, text=True,
+@@ -34,42 +37,16 @@
+ env.update(
+     DB_URL=f"jdbc:mysql://127.0.0.1:{int(settings.get('MYSQL_PORT', '3307'))}/online_exam_e2e?connectionTimeZone=UTC",
+     DB_USER="online_exam", DB_PASSWORD=settings["MYSQL_PASSWORD"],
+-    DEMO_PASSWORD=password, DEBUG="false", PORT="8080",
++    DEMO_PASSWORD=password, DEBUG="false", PORT=str(port),
++    E2E_PORT=str(port), E2E_BROWSER=browser_path,
+ )
+ 
+-# Reuse the existing assertions. Adapt only browser discovery, artifact names,
+-# isolated-schema guards and successful-test session cleanup.
+-procedures = [
++checks = [
+     ("keyboard", ROOT / "tools/check_keyboard_offline_ui.py"),
+     ("safe-text", ROOT / "tools/check_safe_text_ui.py"),
+     ("resilience", ROOT / "tools/check_resilience_browser.py"),
++    ("layouts", ROOT / "tools/check_dashboard_layouts.py"),
+ ]
+-checks = []
+-for label, source in procedures:
+-    content = source.read_text(encoding="utf-8")
+-    content = (
+-        "import os\nfrom urllib.parse import urlparse\n"
+-        "assert urlparse(os.environ['DB_URL'].removeprefix('jdbc:')).path == '/online_exam_e2e', 'Disposable browser schema required'\n"
+-        + content
+-    )
+-    content = content.replace(
+-        "playwright.chromium.launch(headless=True)",
+-        f"playwright.chromium.launch(headless=True, executable_path={browser_path!r})",
+-    )
+-    for old_prefix in ("p07-04", "p08-02", "p08-04"):
+-        content = content.replace(old_prefix, "dashboard-" + label)
+-    if label in ("keyboard", "safe-text"):
+-        content = content.replace(
+-            "    browser.close()",
+-            "    page.goto(base + '/home.html')\n"
+-            "    page.locator('#sign-out').click()\n"
+-            "    expect(page).to_have_url(base + '/login.html')\n"
+-            "    browser.close()",
+-        )
+-    target = LOCAL / f"dashboard-{label}.py"
+-    target.write_text(content, encoding="utf-8")
+-    checks.append((label, target))
+-checks.append(("desktop/mobile layouts", ROOT / "tools/check_dashboard_layouts.py"))
+ 
+ with (LOCAL / "dashboard-test-app-start.log").open("w", encoding="utf-8") as output:
+     server = subprocess.Popen(
+@@ -84,7 +61,7 @@
+             if server.poll() is not None:
+                 raise RuntimeError("Isolated app exited; inspect .local/dashboard-test-app-start.log")
+             try:
+-                response = requests.get("http://127.0.0.1:8080/api/ready", timeout=2)
++                response = requests.get(base + "/api/ready", timeout=2)
+                 if response.status_code == 200 and response.json().get("status") == "UP":
+                     ready = True
+                     break
+@@ -95,7 +72,9 @@
+         print("PASS: isolated online_exam_e2e Java server is HTTP/database ready", flush=True)
+         for label, check in checks:
+             print(f"RUN: {label}", flush=True)
+-            subprocess.run([sys.executable, str(check)], cwd=ROOT, env=env, check=True)
++            prefix = os.environ.get("EVIDENCE_PREFIX", "dashboard")
++            subprocess.run([sys.executable, str(check)], cwd=ROOT,
++                           env={**env, "EVIDENCE_PREFIX": f"{prefix}-{label}"}, check=True)
+         print("PASS: all dashboard acceptance checks executed", flush=True)
+     finally:
+         if server.poll() is None:

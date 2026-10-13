@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "blockers": [
+    {
+      "id": "B001",
+      "task_ids": [
+        "P06-04"
+      ],
+      "category": "TEST",
+      "severity": "S1",
+      "status": "RESOLVED",
+      "owner": "coordinator",
+      "symptom": "The full MySQL verification profile reached 60 integration tests but four session test contexts failed to start with MySQL error 1040: Too many connections.",
+      "reproduction": "Run the full .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify profile with the uncapped test Hikari pools.",
+      "evidence_paths": [
+        "evidence/p06-04-result-query-mysql-it.log"
+      ],
+      "suspected_cause": "Cached Spring integration-test contexts retain multiple Hikari pools at the default size; their combined connections exceed the local MySQL limit.",
+      "attempts": [
+        {
+          "number": 1,
+          "hypothesis": "Cached Spring test contexts exhaust the local MySQL connection limit through uncapped default Hikari pools.",
+          "action": "Set spring.datasource.hikari.maximum-pool-size=4 only in Maven Surefire/Failsafe test processes; rerun the failed full profile and focused session/result regression.",
+          "outcome": "Both gates passed with no errors or skips; production datasource configuration was unchanged.",
+          "verification_ids": [
+            "V0034"
+          ]
+        }
+      ],
+      "safe_alternative": "Cap Hikari pool size only for Maven test processes; keep production datasource sizing unchanged.",
+      "next_action": "Resolved in V0034; keep the test-only cap and retain the original failure log.",
+      "resolution_verification_ids": [
+        "V0034"
+      ],
+      "reopened_count": 0
+    },
+    {
+      "id": "B002",
+      "task_ids": [
+        "P08-01"
+      ],
+      "category": "TEST",
+      "severity": "S1",
+      "status": "RESOLVED",
+      "owner": "coordinator",
+      "symptom": "The full MySQL profile passed 60 existing integration cases but failed all three new recovery cases because current attempts appeared expired: empty active roster and RECOVERY_UNAVAILABLE/409 reset responses.",
+      "reproduction": "Run the full .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify profile with cached fixed-clock expiry test contexts and the uncapped test scheduler delay.",
+      "evidence_paths": [
+        "evidence/p08-01-recovery-full-mysql-it.log"
+      ],
+      "suspected_cause": "A cached ClosedBrowserExpiryIT context retained a 100 ms scheduled scan with a future fixed Clock and finalized later real-time recovery fixtures in the shared isolated integration schema; other fixed-clock contexts also retained periodic scans.",
+      "attempts": [
+        {
+          "number": 1,
+          "hypothesis": "A cached 100 ms fixed-clock expiry test scheduler was finalizing later real-time recovery fixtures in the shared integration schema.",
+          "action": "Set a one-hour scheduler default only in Maven test processes, close the intentional fast-scheduler context after its class, derive recovery fixture time from the injected Clock, then rerun the original full profile and adjacent ordered regression.",
+          "outcome": "The original full gate passed 14 unit/HTTP and 63 MySQL integration tests; the ordered adjacent gate passed 14 plus 21, with no failures/errors/skips. Production scheduling remains 15 seconds.",
+          "verification_ids": [
+            "V0037"
+          ]
+        }
+      ],
+      "safe_alternative": "Use a long test-only default scan delay and close the intentional fast-scheduler context after its class; keep production scheduling unchanged.",
+      "next_action": "Resolved in V0037; retain the original failed log and passing reruns.",
+      "resolution_verification_ids": [
+        "V0037"
+      ],
+      "reopened_count": 0
+    },
+    {
+      "id": "B003",
+      "task_ids": [
+        "UI-01"
+      ],
+      "category": "TEST",
+      "severity": "S1",
+      "status": "RESOLVED",
+      "owner": "coordinator",
+      "symptom": "The generic with_server helper declared TCP 8080 ready, but the first /api/csrf request timed out after ten seconds; its cleanup left the Java child process running.",
+      "reproduction": "Run .local/dashboard-run-with-server.py using the generic webapp-testing with_server.py helper against the packaged demo and isolated online_exam_e2e schema.",
+      "evidence_paths": [
+        "evidence/dashboard-helper-readiness-failed.log"
+      ],
+      "suspected_cause": "The helper starts a shell, captures Java stdout/stderr in undrained PIPEs, checks only TCP readiness, and terminates the shell rather than its Windows Java child. A direct Java process with file-backed output and HTTP readiness avoids these observed runner weaknesses.",
+      "attempts": [
+        {
+          "number": 1,
+          "hypothesis": "Undrained server output plus shell-based Windows lifecycle prevents usable HTTP readiness and cleanup.",
+          "action": "Use structured Java process arguments, direct file output, HTTP /api/ready polling and direct process termination for this isolated test runner.",
+          "outcome": "V0055 passed the original keyboard/authentication check plus offline, safe-text, expiry and 16 desktop/mobile layout regressions. Direct Java process stopped cleanly; local development app restarted successfully.",
+          "verification_ids": [
+            "V0055"
+          ]
+        }
+      ],
+      "safe_alternative": "Directly manage this isolated local Java test process without changing application security or database behavior.",
+      "next_action": "Resolved; use python tools/run_dashboard_checks.py for these isolated Windows browser checks.",
+      "resolution_verification_ids": [
+        "V0055"
+      ],
+      "reopened_count": 0
+    },
+    {
+      "id": "B004",
+      "task_ids": [
+        "TUNNEL-01"
+      ],
+      "category": "DEPLOYMENT",
+      "severity": "S1",
+      "status": "RESOLVED",
+      "owner": "coordinator",
+      "symptom": "Automatic approval review rejected the initial ngrok startup because specific private exam/user data exposure to ngrok was not authorized.",
+      "reproduction": "Request elevated background ngrok startup to the persistent local examination app before the specific data-exposure acknowledgment.",
+      "evidence_paths": [
+        "evidence/ngrok-authorization.md",
+        "evidence/ngrok-public-smoke.json"
+      ],
+      "suspected_cause": "The initial request authorized a tunnel, but the approval review required specific authorization for sensitive payload disclosure to ngrok.",
+      "attempts": [
+        {
+          "number": 1,
+          "hypothesis": "Explicit user acknowledgment of the stated data exposure authorizes the original requested tunnel.",
+          "action": "Record the user reply \"no problem. run it\" after the exact review warning, retry the same startup action, and verify public resources plus protected APIs.",
+          "outcome": "Authorized retry started ngrok successfully; public readiness and dashboard resource checks passed and protected APIs returned 401.",
+          "verification_ids": [
+            "V0057"
+          ]
+        }
+      ],
+      "safe_alternative": "Keep the app available only locally until specific exposure authorization is provided; never bypass the rejected action.",
+      "next_action": "Resolved by explicit user authorization and successful original startup/public regression; keep tunnel lifecycle documented.",
+      "resolution_verification_ids": [
+        "V0057"
+      ],
+      "reopened_count": 0
+    },
+    {
+      "id": "B005",
+      "task_ids": [
+        "EXAM-UIUX-01"
+      ],
+      "category": "DEPLOYMENT",
+      "severity": "S1",
+      "status": "RESOLVED",
+      "owner": "coordinator",
+      "symptom": "Automatic approval review rejected the public browser check because it would send stored instructor credentials through ngrok without specific credential-transmission approval.",
+      "reproduction": "Run .local/verify-uiux-browser.py through the public ngrok URL before the user acknowledges the credential-transmission warning.",
+      "evidence_paths": [
+        "evidence/uiux-test-authorization.md",
+        "evidence/uiux-test-browser.json"
+      ],
+      "suspected_cause": "Prior approval covered app/data exposure; review required specific permission for stored authentication credentials to pass through ngrok.",
+      "attempts": [
+        {
+          "number": 1,
+          "hypothesis": "Specific user approval of the stated credential transmission authorizes the original public role-verification check.",
+          "action": "Record the user acknowledgment \"run it. no problem\" after the exact warning, rerun the same browser script, and retain read-only MySQL verification.",
+          "outcome": "The original public browser check passed with both role schedule/catalog views; direct MySQL verification also passed, no student test attempt was consumed and verification sessions logged out.",
+          "verification_ids": [
+            "V0058"
+          ]
+        }
+      ],
+      "safe_alternative": "Verify through the local loopback app until specific public credential-transmission authorization is supplied; do not bypass review rejection.",
+      "next_action": "Resolved by the explicit user authorization and successful original browser check plus MySQL persistence verification.",
+      "resolution_verification_ids": [
+        "V0058"
+      ],
+      "reopened_count": 0
+    },
+    {
+      "id": "B006",
+      "task_ids": [
+        "CODE-01"
+      ],
+      "category": "ENVIRONMENT",
+      "severity": "S2",
+      "status": "RESOLVED",
+      "owner": "coordinator",
+      "symptom": "Spring Boot repackage cannot rename the JAR while the Windows Java process holds it open.",
+      "reproduction": "Run mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 package while the dev app uses the target JAR.",
+      "evidence_paths": [
+        "evidence/refactor-package.log",
+        "evidence/refactor-data-before.json",
+        "evidence/refactor-package-retry.log",
+        "evidence/refactor-final-mysql.log",
+        "evidence/refactor-final-browser.log",
+        "evidence/refactor-final-local-start.log",
+        "evidence/refactor-final-data-check.log"
+      ],
+      "suspected_cause": "Windows locks the running application JAR. The owned process is outside the sandbox and needs approved local process access to stop.",
+      "attempts": [
+        {
+          "number": 1,
+          "hypothesis": "Stopping the launcher-owned app releases the JAR lock.",
+          "action": "Confirm zero active attempts; hash persistent tables; stop only the owned process through the existing guarded launcher.",
+          "outcome": "The original package check passed after the guarded owned-process stop. Final package, 14 unit/HTTP, 69 MySQL, four browser cases, native acceptance, restart and clean setup all passed; live data matched and the updated owned app restarted successfully.",
+          "verification_ids": [
+            "V0062"
+          ]
+        }
+      ],
+      "safe_alternative": "Keep persistent MySQL data and ngrok unchanged; restart only the recorded application process.",
+      "next_action": "Resolved; stop the owned Windows app before rebuilding its JAR.",
+      "resolution_verification_ids": [
+        "V0062"
+      ],
+      "reopened_count": 0
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "student_count": 15,
+  "stored_names_roles_hashes": "Verified by transactional Java importer",
+  "local_api_logins": 15,
+  "existing_sessions_preserved": 0,
+  "numeric_login_browser_check": "PASS",
+  "student_catalog_access": "PASS",
+  "exam_attempts_started": 0,
+  "verification_sessions_logged_out": true,
+  "browser_page_errors": 0,
+  "credentials_in_evidence": false,
+  "result": "PASS"
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "path": "/api/ready",
+    "status": 200,
+    "readiness": "UP"
+  },
+  {
+    "path": "/login.html",
+    "status": 200,
+    "login_page": true
+  },
+  {
+    "path": "/api/auth/me",
+    "status": 401
+  },
+  {
+    "path": "/api/student/exams",
+    "status": 401
+  },
+  {
+    "path": "/api/instructor/exams",
+    "status": 401
+  },
+  {
+    "path": "/api/instructor/exams/1/results",
+    "status": 401
+  }
+]

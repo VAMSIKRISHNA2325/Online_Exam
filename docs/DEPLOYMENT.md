@@ -1,0 +1,19 @@
+# Conditional hosting runbook
+
+Durable production hosting remains conditional. On 2026-10-10 the user explicitly authorized a temporary public ngrok tunnel, including exposure of existing local exam/user data to ngrok after the approval review warning. The tunnel is recorded separately as `TUNNEL-01` and `public_tunnel` in the task ledger; the two full production-hosting P12 tasks remain outside this temporary sharing request. Their `deployment_status` remains `NOT_REQUESTED`.
+
+For a single-instance deployment, provide Java 21, MySQL 8.4, durable database storage, HTTPS termination and a private secret store. The variable names are shown in [`deploy/runtime.env.example`](../deploy/runtime.env.example); the application reads process environment, not that file. Build with `./mvnw -B -ntp clean package` (or `mvnw.cmd` on Windows), then run the resulting `target/online-exam-0.1.0-SNAPSHOT.jar` with `DB_URL`, `DB_USER`, `DB_PASSWORD`, `PORT` and `COOKIE_SECURE=true` set through the host's private configuration. Use a dedicated MySQL account limited to the application schema. The app applies Flyway migrations at startup; take and verify a backup before upgrading it. Provision accounts via the private `provision` profile, not the demo profile. Route HTTPS to the one application instance and check `/api/ready` after startup. Configure proxy forwarding explicitly for the chosen host and test the complete login/session flow through the public HTTPS address.
+
+Keep the session store and login-throttle counters on that one Java instance. Do not distribute requests over multiple app instances without designing shared session and throttling storage and retesting the one-session policy. Monitor MySQL health, Java process health, failed logins and backup completion; retain and protect MySQL backups under an operator-defined retention policy. Rehearse a restore into an isolated schema before any cutover, following [BACKUP_RESTORE.md](BACKUP_RESTORE.md). Give operators a way to rotate database and account secrets without publishing them in command arguments or logs.
+
+Before calling a public deployment complete, record the actual host, domain, certificate/HTTPS configuration, data location, backup/restore result and browser smoke evidence on that host. A local screenshot or localhost URL is not evidence of public deployment. Flyway 11.7.2 warns that MySQL 8.4 is outside its certified range, and Spring Boot 3.5.16 requires a maintenance migration plan for long-term service.
+
+The local release smoke in `evidence/p10-01-release-startup-passing.log` starts the packaged JAR using external database settings. That proves the runnable package, not public TLS or host-specific backup operations. Keep a separate deployment record for those conditions.
+
+## Temporary ngrok sharing, 2026-10-10
+
+Current public link: [https://graveness-undrafted-harsh.ngrok-free.dev](https://graveness-undrafted-harsh.ngrok-free.dev). It forwards HTTPS through ngrok to the running local app at `http://127.0.0.1:8080`. It remains available while this machine, Java/MySQL and ngrok stay running. The existing application sign-in and role checks remain active. Ngrok request inspection is disabled.
+
+The background process is recorded in ignored `.local/ngrok-process.json` (PID and start time); the current URL is in `.local/ngrok-tunnel.json`. Logs and ngrok account configuration remain private. Public smoke evidence is `evidence/ngrok-public-smoke.json`; it confirms readiness, current dashboard HTML/CSS and 401 responses for anonymous protected APIs.
+
+To start a fresh tunnel manually after stopping the current one, run `ngrok http http://127.0.0.1:8080 --inspect=false` with the local app running and retrieve the new URL. Use Ctrl+C to stop a tunnel started in that terminal. A restarted tunnel must be checked again before updating its live URL record.

@@ -1,0 +1,13 @@
+{
+  "exam_id": 3,
+  "public_url": "https://graveness-undrafted-harsh.ngrok-free.dev",
+  "timezone": "Asia/Calcutta",
+  "checks": [
+    "Public instructor UI: published, 30 questions, 4 options each, 10 minutes and exact Asia/Calcutta opening/closing times",
+    "Public student catalog: exact schedule, counts, marks and correct availability; no answer key; no test attempt created"
+  ],
+  "availability_at_check": "UPCOMING",
+  "student_attempt_created": false,
+  "page_errors": 0,
+  "result": "PASS"
+}

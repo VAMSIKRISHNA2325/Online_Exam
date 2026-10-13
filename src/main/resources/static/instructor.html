@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta content="#f3f4f6" name="theme-color">
+    <title>Instructor dashboard | Examroom</title>
+    <link href="/assets/app.css" rel="stylesheet">
+    <script src="/assets/instructor.js" type="module"></script>
+  </head>
+  <body class="instructor-page">
+    <div class="app-frame">
+      <header class="app-header">
+        <a aria-label="Examroom dashboard" class="wordmark" href="/home.html"><span aria-hidden="true" class="wordmark-icon">E</span><span>Examroom</span></a>
+        <nav aria-label="Main navigation" class="header-nav"><a href="/home.html">Dashboard</a><a aria-current="page" href="/instructor.html">Examinations</a></nav>
+        <div class="header-right"><span class="header-label">Instructor</span><a class="outline-button" href="/home.html">My account</a></div>
+      </header>
+      <main aria-labelledby="desk-title" class="desk-layout">
+        <aside aria-label="Your examinations" class="desk-sidebar">
+          <div class="sidebar-heading"><span>Examinations</span><span id="exam-count">00</span></div>
+          <button class="sidebar-new" disabled id="new-exam" type="button">Create an exam </button>
+          <div class="exam-list" id="exam-list"></div>
+        </aside>
+        <section class="desk-main">
+          <div class="page-heading">
+            <h1 id="desk-title">Instructor dashboard</h1>
+            <p>Create examinations, manage questions, and review student results.</p>
+          </div>
+          <div class="notice error-notice" hidden id="desk-error" role="alert"></div>
+          <p aria-live="polite" class="desk-status" hidden id="desk-status" role="status"></p>
+          <div class="loading-state" id="desk-loading">Loading examinations...</div>
+          <section class="desk-empty" hidden id="desk-empty">
+            <h2>No examinations yet</h2>
+            <p>Create an examination and add questions before publishing it to students.</p>
+            <button class="primary-button compact-button" id="empty-create" type="button"><span>Create your first exam</span></button>
+          </section>
+          <section aria-labelledby="editor-title" class="exam-editor" hidden id="exam-editor">
+            <div class="editor-heading">
+              <div>
+                <p class="section-number" id="editor-eyebrow">Draft examination</p>
+                <h2 id="editor-title">New exam</h2>
+              </div>
+              <span class="status-pill" id="exam-status">DRAFT</span>
+            </div>
+            <form class="editor-form" id="exam-form">
+              <div class="field">
+                <label for="exam-title">Exam title</label>
+                <input id="exam-title" maxlength="200" name="title" placeholder="e.g. Foundations of Biology" required type="text">
+              </div>
+              <div class="field">
+                <label for="exam-description">Description <span class="optional">optional</span></label>
+                <textarea id="exam-description" maxlength="5000" name="description" placeholder="What should students know before they begin?" rows="3"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="field">
+                  <label for="exam-duration">Time allowed · minutes</label>
+                  <input id="exam-duration" max="10080" min="1" name="duration" required step="1" type="number" value="30">
+                </div>
+                <div class="field">
+                  <label for="exam-opens">Opens</label>
+                  <input id="exam-opens" name="opens" required type="datetime-local">
+                </div>
+                <div class="field">
+                  <label for="exam-closes">Closes</label>
+                  <input id="exam-closes" name="closes" required type="datetime-local">
+                </div>
+              </div>
+              <div class="editor-actions"><button class="primary-button compact-button" id="save-exam" type="submit"><span>Save exam details</span></button><button class="danger-link" hidden id="delete-exam" type="button">Delete draft</button></div>
+            </form>
+            <section aria-labelledby="paper-title" class="paper-section" hidden id="paper-section">
+              <div class="paper-heading">
+                <div>
+                  <p class="section-number">Exam content</p>
+                  <h2 id="paper-title">Questions <span class="count-mark" id="question-count">00</span></h2>
+                </div>
+                <button class="outline-button" id="add-question" type="button">Add question </button>
+              </div>
+              <div class="question-list" id="question-list"></div>
+              <p class="paper-empty" id="paper-empty">No questions added. Select Add question to build this examination.</p>
+              <div class="question-editor" hidden id="question-editor">
+                <div class="question-editor-heading">
+                  <h3 id="question-editor-title">New question</h3>
+                  <button class="text-button-inline" id="cancel-question" type="button">Close</button>
+                </div>
+                <form id="question-form">
+                  <div class="field">
+                    <label for="question-text">Question</label>
+                    <textarea id="question-text" maxlength="5000" placeholder="Write a clear, single-answer question" required rows="3"></textarea>
+                  </div>
+                  <div class="field marks-field">
+                    <label for="question-marks">Marks</label>
+                    <input id="question-marks" max="1000" min="1" required step="1" type="number" value="1">
+                  </div>
+                  <fieldset class="options-field">
+                    <legend>Answer options <span>Choose one correct answer</span></legend>
+                    <div id="options-list"></div>
+                    <button class="text-button-inline" id="add-option" type="button">+ Add another option</button>
+                  </fieldset>
+                  <button class="primary-button compact-button" id="save-question" type="submit"><span>Save question</span></button>
+                </form>
+              </div>
+              <div class="publish-band">
+                <div>
+                  <strong>Publish examination</strong>
+                  <p>Publication freezes the questions, answer key, marks and timing.</p>
+                </div>
+                <button class="primary-button compact-button" id="publish-exam" type="button"><span>Publish exam</span></button>
+              </div>
+            </section>
+            <section aria-labelledby="recovery-title" class="results-section" hidden id="recovery-section">
+              <div class="paper-heading">
+                <div>
+                  <p class="section-number">Active attempts</p>
+                  <h2 id="recovery-title">Session recovery <span class="count-mark" id="recovery-count">00</span></h2>
+                </div>
+                <button class="outline-button" id="refresh-recovery" type="button">Refresh active attempts</button>
+              </div>
+              <p class="paper-empty">If a student loses their session, you can end that student's old login. Their saved answers and original deadline stay in place.</p>
+              <p class="loading-state" hidden id="recovery-loading">Checking active attempts...</p>
+              <div class="notice error-notice" hidden id="recovery-error" role="alert"></div>
+              <p class="paper-empty" hidden id="recovery-empty">No current attempts need recovery.</p>
+              <div class="results-list" id="recovery-list"></div>
+            </section>
+            <section aria-labelledby="results-title" class="results-section" hidden id="results-section">
+              <div class="paper-heading">
+                <div>
+                  <p class="section-number">Finalized attempts</p>
+                  <h2 id="results-title">Student results <span class="count-mark" id="result-count">00</span></h2>
+                </div>
+                <button class="outline-button" id="refresh-results" type="button">Refresh results</button>
+              </div>
+              <p class="loading-state" hidden id="results-loading">Checking final results...</p>
+              <div class="notice error-notice" hidden id="results-error" role="alert"></div>
+              <p class="paper-empty" hidden id="results-empty">No finalized attempts yet. Results appear here after students submit or their time expires.</p>
+              <div class="results-list" id="results-list"></div>
+            </section>
+          </section>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

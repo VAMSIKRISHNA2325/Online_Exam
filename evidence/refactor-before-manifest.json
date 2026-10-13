@@ -1,0 +1,737 @@
+[
+  {
+    "path": "src/test/java/com/onlineexam/AccessControlIT.java",
+    "sha256": "de47e7147b28cb370ed0c45088998980b0d88bb57846beebb1c70eda7db80e4b",
+    "lines": 151
+  },
+  {
+    "path": "src/test/java/com/onlineexam/AccountProvisioningIT.java",
+    "sha256": "10486914d30a467e45e315711599095467cb20ca730fb9476913c573167a0883",
+    "lines": 107
+  },
+  {
+    "path": "src/test/java/com/onlineexam/AnswerSaveIT.java",
+    "sha256": "ff6c7e27f376274bb2c6232669e60e1903d51a520300ee4ff9930f804be18252",
+    "lines": 382
+  },
+  {
+    "path": "src/test/java/com/onlineexam/AttemptResumeIT.java",
+    "sha256": "94e630cd879536a1ceb14cdb6a2a24899424b57019756310283d293a34134fd6",
+    "lines": 246
+  },
+  {
+    "path": "src/test/java/com/onlineexam/AttemptStartIT.java",
+    "sha256": "6079428f425a7afde3522304459fe0e431206c1f64c4cf8c70dc5c8637f75668",
+    "lines": 339
+  },
+  {
+    "path": "src/test/java/com/onlineexam/AuthenticationIT.java",
+    "sha256": "3484974cd3b32bad997a9bec3a5c9c497e867da6153469422a621ac2394b6105",
+    "lines": 113
+  },
+  {
+    "path": "src/test/java/com/onlineexam/ClosedBrowserExpiryIT.java",
+    "sha256": "d3d49f42ad1b54cfa468f8de57cf83a4dfe94ecdc0cfe02bcfadb3c4a273e324",
+    "lines": 119
+  },
+  {
+    "path": "src/test/java/com/onlineexam/ExamAuthoringIT.java",
+    "sha256": "2f5ded71bc7ee6a7caceb23ee56513664d08b02fbbf912d6974b311069f140ec",
+    "lines": 382
+  },
+  {
+    "path": "src/test/java/com/onlineexam/ExamPublicationIT.java",
+    "sha256": "8a79ec186d2b338f628b6279a85032548f1d300f86004d46c5f5fbab3e68bbee",
+    "lines": 276
+  },
+  {
+    "path": "src/test/java/com/onlineexam/ExpiryRecoveryIT.java",
+    "sha256": "fb414accc41049d3bfc5eb92e519b487eccd79ccb9387b3bfc7c30b9fa47051b",
+    "lines": 306
+  },
+  {
+    "path": "src/test/java/com/onlineexam/FinalizationIT.java",
+    "sha256": "31e66fcf3338f8134fd869405b9f0bc72c54228b3119720c3744274537dc299e",
+    "lines": 501
+  },
+  {
+    "path": "src/test/java/com/onlineexam/InstructorRoleEnforcementIT.java",
+    "sha256": "ae386f4f99fd2ebda79b6a0e075aa07e8ae434babda7ccf72f016f15c35407e7",
+    "lines": 199
+  },
+  {
+    "path": "src/test/java/com/onlineexam/IntegrationDb.java",
+    "sha256": "179fa78a271c7c4e6481d59cb9de3dae09cd722cd6d6cd3a555d295d776ebf03",
+    "lines": 32
+  },
+  {
+    "path": "src/test/java/com/onlineexam/LoginThrottleIT.java",
+    "sha256": "1dd01decc1dbc313349cdb563403c5b9622700db7d4749a05e601a1ffa2e3498",
+    "lines": 163
+  },
+  {
+    "path": "src/test/java/com/onlineexam/MySqlReadinessIT.java",
+    "sha256": "6838c88882e895e5dc8a15f743c2571c2fca199e67a2ccb2eb9ee07a3b6bea79",
+    "lines": 84
+  },
+  {
+    "path": "src/test/java/com/onlineexam/RepositoryIT.java",
+    "sha256": "d0730a3192ba0d9cf8a6dc4b62d2c9dce2984cc1e7defc7ae0ef49c57918658c",
+    "lines": 205
+  },
+  {
+    "path": "src/test/java/com/onlineexam/ResultQueryIT.java",
+    "sha256": "7b6feec38adb94987bfb043cd07a232aed9a85d67d50c622b29f2520113b573a",
+    "lines": 336
+  },
+  {
+    "path": "src/test/java/com/onlineexam/SaveDeadlineRollbackIT.java",
+    "sha256": "31437aabfdf85ef02eccd7626e577538e6e08a558397ede0301532cc8b0b92bc",
+    "lines": 344
+  },
+  {
+    "path": "src/test/java/com/onlineexam/SchemaIT.java",
+    "sha256": "83444dcd35188b61abc6b4e6f64418ab38b8b9570a394c900a50c36db5692deb",
+    "lines": 189
+  },
+  {
+    "path": "src/test/java/com/onlineexam/SessionAndCsrfLifecycleIT.java",
+    "sha256": "bbed3b2f51cb30ed34aeac563823cbef3bbc0438adb3ced6d08f182842fc2cde",
+    "lines": 141
+  },
+  {
+    "path": "src/test/java/com/onlineexam/SessionRecoveryIT.java",
+    "sha256": "c9423919d753615563295baaec12b52c686193403a2dfcfd7ea1361b0e4cb86a",
+    "lines": 369
+  },
+  {
+    "path": "src/test/java/com/onlineexam/StudentExamCatalogIT.java",
+    "sha256": "70bdcd8207e70ef55735e1e05cee7d37354deca5cf0c05be58d48d5cc8cbc1d2",
+    "lines": 206
+  },
+  {
+    "path": "src/test/java/com/onlineexam/StudentPrivacyIT.java",
+    "sha256": "81fdf5541c4e7bfcfcdcc95fa70e031115c347542f34b9fb2479f03883655e0b",
+    "lines": 230
+  },
+  {
+    "path": "src/test/java/com/onlineexam/StudentSessionExpiryIT.java",
+    "sha256": "7904c994b387a131471633ae4e2100cbe82feefbac9ec0595ba42dbd1b1633fd",
+    "lines": 147
+  },
+  {
+    "path": "src/test/java/com/onlineexam/StudentSessionIT.java",
+    "sha256": "a0b623fc62e6fdc40e84475d8f16b527a19216514976c38a0988991c5f64fcb0",
+    "lines": 214
+  },
+  {
+    "path": "src/test/java/com/onlineexam/controller/AuthenticationHttpTest.java",
+    "sha256": "da7955f0138588440b59aa1a0a4e45527b498e609b2efd2e068718f24dac40d9",
+    "lines": 190
+  },
+  {
+    "path": "src/test/java/com/onlineexam/controller/ReadinessControllerTest.java",
+    "sha256": "e55fd847b73f871631a0e2972a357cac9bfc68d4c14f0ab3d5b6fd0f41b1234d",
+    "lines": 43
+  },
+  {
+    "path": "src/test/java/com/onlineexam/controller/ReadinessHttpTest.java",
+    "sha256": "96d33a1cc28ad1f0d103a52e65b7f4af43b0d3808768638ee51ec7460931448b",
+    "lines": 76
+  },
+  {
+    "path": "src/test/java/com/onlineexam/dto/QuestionViewsTest.java",
+    "sha256": "4266f5bc9c14ffdda5e3a9b3d1d2b7bc96961be62afe285de4472d3a8de46855",
+    "lines": 27
+  },
+  {
+    "path": "src/test/java/com/onlineexam/security/ExamPrincipalTest.java",
+    "sha256": "7ef11ee13eceefc276226ae3212d8e5d0e1ffcdeebde99c37f2f235753f8542c",
+    "lines": 23
+  },
+  {
+    "path": "src/test/java/com/onlineexam/security/LoginThrottleTest.java",
+    "sha256": "c5dc96b86268984b2d8bffb0e2885dd7ba2e0c9a573e81402bb12550cde8ed77",
+    "lines": 63
+  },
+  {
+    "path": "src/test/java/com/onlineexam/service/GradingServiceTest.java",
+    "sha256": "4f0d35963ed97ab2557645e3b6b913ef39521ea389e2b95b6c9e94db7c505fee",
+    "lines": 68
+  },
+  {
+    "path": "src/main/resources/application-provision.yml",
+    "sha256": "e19dcd519fefdb1d80ca0328a0593dff8684ca42aec529522fef02da140725c7",
+    "lines": 3
+  },
+  {
+    "path": "src/main/resources/application.yml",
+    "sha256": "bd366786d67ced1417982a3e9b6628c7d3da7b269c624f76e95d98c88c5d730c",
+    "lines": 31
+  },
+  {
+    "path": "src/main/resources/static/exam.html",
+    "sha256": "c4a0d7e8489d5d0364898f8519a82f7ba96a659c8e1e837b07de2559419e67d7",
+    "lines": 43
+  },
+  {
+    "path": "src/main/resources/static/home.html",
+    "sha256": "3abd7172f502a9cd3daec923f46d25c09e3a021e5d1ba2e9bd8abdd9c44ec9f7",
+    "lines": 38
+  },
+  {
+    "path": "src/main/resources/static/index.html",
+    "sha256": "728ba00978e6dbf04eaca144c7e9416ae041760dba51d6e0e433f0f195579824",
+    "lines": 12
+  },
+  {
+    "path": "src/main/resources/static/instructor.html",
+    "sha256": "a5abf7951ad60d80beae3a2571b329be91ab2eee070999460fb2cb01a971cf89",
+    "lines": 80
+  },
+  {
+    "path": "src/main/resources/static/login.html",
+    "sha256": "5d6f610a1cca0052f54371e3c3241b5b003c6fd7d26f76153b81928564e1eb6d",
+    "lines": 32
+  },
+  {
+    "path": "src/main/resources/static/student.html",
+    "sha256": "d3f60f73e5ec8f1a8c9d877dce320c10362a390174b4c5d1b55bf184db00be1c",
+    "lines": 42
+  },
+  {
+    "path": "src/main/resources/static/assets/app.css",
+    "sha256": "cc93e1ab8ac3ec652b8277fd2c2b2875236b0316a8fc7cabb0622f8c8189c6d9",
+    "lines": 28
+  },
+  {
+    "path": "src/main/resources/static/assets/auth.js",
+    "sha256": "3a3f606bc9d66e559cddfe996b348a6850e77daae27606ed062fe531f8201eb2",
+    "lines": 77
+  },
+  {
+    "path": "src/main/resources/static/assets/exam.js",
+    "sha256": "5886b8f216da8b8c51e7798eafe8eba1c2d5f20ed22ebf92cc0a17f32a4c6999",
+    "lines": 490
+  },
+  {
+    "path": "src/main/resources/static/assets/home.js",
+    "sha256": "e98c628aa568c3c486c877d3e53d6008be995b781bee3cfefa92042a0d5a1eb0",
+    "lines": 51
+  },
+  {
+    "path": "src/main/resources/static/assets/instructor.js",
+    "sha256": "3600898c667d631e55f895d3896173132286c8caa6506392539ef2c5f4cb9f8c",
+    "lines": 472
+  },
+  {
+    "path": "src/main/resources/static/assets/login.js",
+    "sha256": "91bfd1fe12b24bbb3a415e8e42047041d671a203320fb3c5730bb6f95999b2e8",
+    "lines": 69
+  },
+  {
+    "path": "src/main/resources/static/assets/student.js",
+    "sha256": "f3d102dfefbfc80b94359c7a60da19369b277c8b1fff5d31b35832fbdbcbc153",
+    "lines": 168
+  },
+  {
+    "path": "src/main/java/com/onlineexam/OnlineExamApplication.java",
+    "sha256": "fd96edd70efe7afc7f8791d1b2d961eeb522793a989caeddde45e592bb30080e",
+    "lines": 11
+  },
+  {
+    "path": "src/main/java/com/onlineexam/config/DemoAccountsRunner.java",
+    "sha256": "e339bfeae8f03255d7b2b4ea974115d2f9c517df904b0e5ca0dfdfb3e0fa8e0b",
+    "lines": 26
+  },
+  {
+    "path": "src/main/java/com/onlineexam/config/ExpirySchedulingConfig.java",
+    "sha256": "953182f17dc11b57c4916c5ba3b21a15e65a2e605d170ffa7e304d5dcbe80ae8",
+    "lines": 9
+  },
+  {
+    "path": "src/main/java/com/onlineexam/config/PasswordConfig.java",
+    "sha256": "11aaf2cf92da890c9fd7d0dd6177eab62ba98a4ac48973b336b648e1d74f8c46",
+    "lines": 14
+  },
+  {
+    "path": "src/main/java/com/onlineexam/config/ProvisionAccountRunner.java",
+    "sha256": "a2a589ea76bff821c1c1acbec803b1b4861caaff8a460039ab8dfd696d534681",
+    "lines": 45
+  },
+  {
+    "path": "src/main/java/com/onlineexam/config/SecurityConfig.java",
+    "sha256": "185370c481318df30a5e1c977b2b30b19c8801927d259a95ef01e4ff2ed9e368",
+    "lines": 138
+  },
+  {
+    "path": "src/main/java/com/onlineexam/config/TimeConfig.java",
+    "sha256": "fc76e047975cf3560b07dc725eea3f3d0cc3436c29f8af9d28076ed54b2a2b62",
+    "lines": 13
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/ApiError.java",
+    "sha256": "0324dbaa89c9a91485e24e764c7de7d1127e2205f7e83c441b8e131d5445713e",
+    "lines": 4
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/ApiException.java",
+    "sha256": "fe6429f0007fd0b3b69ba4388d1b555acfa3a326801de1c4646a6e46e97ebf30",
+    "lines": 22
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/ApiExceptionHandler.java",
+    "sha256": "04f634949be914bd2c27ab65cb1463b3cd57fb10f3f46786734656f53a1a8902",
+    "lines": 27
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/AuthenticationController.java",
+    "sha256": "6872f4a6b72f64bd8abc7dfc9fd857fb5b8e38838700dd96adef4196ea268177",
+    "lines": 37
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/ExamAuthoringController.java",
+    "sha256": "50272b92821d11f5b78fd265281183395ce0f977f7b3c6c692d715402d4eee42",
+    "lines": 74
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/ExamPublicationController.java",
+    "sha256": "2968f8c159c8f78b33578d3e956cfe03caf773c4c11f6401ba292dc2f942930b",
+    "lines": 21
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/ReadinessController.java",
+    "sha256": "79ff446294ee81bc061b225dbe4aa231732111a7cad6a9f828e2ae9fd70d954b",
+    "lines": 34
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/ResultQueryController.java",
+    "sha256": "841e964f7f015dd50e9c570abeea5c19944be4c27d81f4fc6b1f06704e2293b0",
+    "lines": 34
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/SessionRecoveryController.java",
+    "sha256": "d61bee9fed5431a63aaec2eb38815ede817fb55ded7e5088c76e0d8b00fc0352",
+    "lines": 33
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/StudentAnswerController.java",
+    "sha256": "5cf73e4ff3543ab08bb6e444fa0e93ef61593372929292d3d8c63f1bcfff9f08",
+    "lines": 38
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/StudentAttemptController.java",
+    "sha256": "e99723518de5aab850545ebe0dda89a514c370e88942adb63d5b8cb15457ba50",
+    "lines": 34
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/StudentExamCatalogController.java",
+    "sha256": "479d0b41413514b33b0b8d0e5a73fbbf6cff0bd2d656eacab952758f7a8bba06",
+    "lines": 27
+  },
+  {
+    "path": "src/main/java/com/onlineexam/controller/StudentSubmissionController.java",
+    "sha256": "5d4bb2f153baa4652a4f0f046a81b6a3786e8b1412a968984cb9edadf7d12981",
+    "lines": 21
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/Answer.java",
+    "sha256": "ba4cae4b4888acc7014c9406901ebae0ab20c2d156946afd1d9156b4f825c915",
+    "lines": 7
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/AnswerRevision.java",
+    "sha256": "19d8702d199848d627fafc5787ddcd137aba312df9fa822fcf755cc889247af1",
+    "lines": 7
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/Attempt.java",
+    "sha256": "59d16fbfe9baf0e9dc228ad81ac5e70a518cf7d5a9874fb14c51100898afe867",
+    "lines": 8
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/AttemptStatus.java",
+    "sha256": "0e15a70673a60c3ef3166a3d50d517a465b71fba2d4d37ec8ba83ef49c6e7968",
+    "lines": 7
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/Exam.java",
+    "sha256": "991fdb1c927b4948a6bda91611676bcbf7a05fed07eef2a3050bc40fdd0f21f6",
+    "lines": 8
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/ExamStatus.java",
+    "sha256": "d4e63c6e030395c37465a4cb94f18c6e88b7ff6c3a2f341312173c866aad3b81",
+    "lines": 6
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/Question.java",
+    "sha256": "f30fcb329bfeabee9c0bcc86d0ffda7fbd9696474685448bcf5d229d84a88964",
+    "lines": 4
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/QuestionOption.java",
+    "sha256": "fdeb196612fc3ec41dc270db8009fe7feddc6551f9e3f7b2e479fd4e36e4e621",
+    "lines": 5
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/Role.java",
+    "sha256": "4fc30187df45c77f2d6c2b231983d9a771e9d56593abc273b696b26df5bd9d64",
+    "lines": 6
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/SecurityEvent.java",
+    "sha256": "029f34ba6d05ff32adfe8daf0b5436ed615d38f8920f8015c39f3d7d20f8273b",
+    "lines": 7
+  },
+  {
+    "path": "src/main/java/com/onlineexam/domain/User.java",
+    "sha256": "84b0747d504b23823061ad66ad5bc72c5572aae65f469edf8930fe89aa06531f",
+    "lines": 7
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/ActiveAttemptView.java",
+    "sha256": "4fc27cba61b27ea50d45d6e5b77238ac056ae3a0d32d8ee82e4de1854ca1a8e4",
+    "lines": 8
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/AnswerSaveRequest.java",
+    "sha256": "3583978c3f5ec8bfffd9e9c27574fb194302d4f72c07e76987160b3fd22619d3",
+    "lines": 9
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/AuthoringRequests.java",
+    "sha256": "e58a5be1f0efb756a16ab5167b339d2765c9b98b5e8022dc91400332fa9744d5",
+    "lines": 36
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/AuthoringViews.java",
+    "sha256": "2ef48b34ad3340964bf2114aed78938a5c31c2dec67ec26e959374a58afb60d8",
+    "lines": 25
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/InstructorEventView.java",
+    "sha256": "5a356c3bbaa0076db5267aaa85858864650c98f8f5d992faefdba0cd405bd144",
+    "lines": 8
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/InstructorResultView.java",
+    "sha256": "d76d9bb5b5c95f540aa985a9411f0924f4f238b4cec299bbaeb39772aaaa9636",
+    "lines": 6
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/QuestionViews.java",
+    "sha256": "29bc969522f92567df23cd8364b1d6c692f603201a8204122faa0c3002d40821",
+    "lines": 38
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/StudentAnswerView.java",
+    "sha256": "cbcdbef6c047cf1b82ebf1b55770bb1259aec734fc4adda900ebfcda76ea06ce",
+    "lines": 16
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/StudentAttemptSummary.java",
+    "sha256": "82c31f763b6187ab2287f4f37f08782dbfd3c4d01ce672ea838b2652fec821cd",
+    "lines": 15
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/StudentAttemptView.java",
+    "sha256": "c0d9c4bcc28be12c4368bb22efd71f0264f0a443e13bb9e1b5d965e3ff6b1756",
+    "lines": 24
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/StudentExamView.java",
+    "sha256": "d82bfd7db4775440c14d6fe68a61de9d746d0be9819ac2621da9e90a24e66bb7",
+    "lines": 17
+  },
+  {
+    "path": "src/main/java/com/onlineexam/dto/StudentResultView.java",
+    "sha256": "e773bb2f7775e644eabcacdfa7b2679cee58b2195f6010180c6951b01fb45029",
+    "lines": 26
+  },
+  {
+    "path": "src/main/java/com/onlineexam/repository/AnswerRepository.java",
+    "sha256": "6cb1027dc762fab2e01ab6b22708681763c952d6ad01cfe9c6c4c88069fea2ec",
+    "lines": 74
+  },
+  {
+    "path": "src/main/java/com/onlineexam/repository/AttemptRepository.java",
+    "sha256": "733e65ade4a4960471b3237771521247a210b11e025f4456a77323b458859cc4",
+    "lines": 98
+  },
+  {
+    "path": "src/main/java/com/onlineexam/repository/ExamRepository.java",
+    "sha256": "1d97865956d3fcbfdacf9fa9274add8a62e0cb0254dd58533b8161ebc8abe33a",
+    "lines": 73
+  },
+  {
+    "path": "src/main/java/com/onlineexam/repository/JdbcValues.java",
+    "sha256": "c11c7ed0fb16cb68a407acbe0fa7d2ddf51a4ac21e3b1af23295ac6077ab871f",
+    "lines": 40
+  },
+  {
+    "path": "src/main/java/com/onlineexam/repository/QuestionOptionRepository.java",
+    "sha256": "dc03e5934535f03f64424964fd24b3f94867ce5c00fce604de4ca12d305dc533",
+    "lines": 54
+  },
+  {
+    "path": "src/main/java/com/onlineexam/repository/QuestionRepository.java",
+    "sha256": "db51d0d665e638d4ff0c64b89b2c059cfbe5bf30c0a313670f18dccdb779cf0c",
+    "lines": 51
+  },
+  {
+    "path": "src/main/java/com/onlineexam/repository/SecurityEventRepository.java",
+    "sha256": "ecca51a9a2a3d50651716a12c83a2a3a956e32fc9376ced0b82bc5d1c797ea2d",
+    "lines": 58
+  },
+  {
+    "path": "src/main/java/com/onlineexam/repository/UserRepository.java",
+    "sha256": "f23322460769ce58501374a90d816497943c6a4f8082d45c8b0e91feb6b06626",
+    "lines": 51
+  },
+  {
+    "path": "src/main/java/com/onlineexam/security/DuplicateLoginAudit.java",
+    "sha256": "bb73e6e553e36cde5d06b87f9d0049e674a05041808a7848777f8a7c055a9afd",
+    "lines": 29
+  },
+  {
+    "path": "src/main/java/com/onlineexam/security/ExamPrincipal.java",
+    "sha256": "9a3857b445aad0a710595f64fa9bd5b5d161670beb2caf5af67f43f29bed6bae",
+    "lines": 54
+  },
+  {
+    "path": "src/main/java/com/onlineexam/security/LoginRegistrationLock.java",
+    "sha256": "638b30c08e79c837c2217c0c54377be0b1b5e4173cfce2f6ea2152eae92194ff",
+    "lines": 16
+  },
+  {
+    "path": "src/main/java/com/onlineexam/security/LoginSerializingFilter.java",
+    "sha256": "19758811659e96afc873bfaa681588a8795ee6b4c575f7959ec91168e8ce344b",
+    "lines": 74
+  },
+  {
+    "path": "src/main/java/com/onlineexam/security/LoginThrottle.java",
+    "sha256": "c9447f21f807220a146b93aa9ca665f000ed6838051f244b28c7c4d29143ed6e",
+    "lines": 132
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/AccessControl.java",
+    "sha256": "0c51d263f409f762f2cc8e1581589861e61641f07af7ab4e351ba05ea71352e8",
+    "lines": 88
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/AccountProvisioningService.java",
+    "sha256": "cfa4862a5871c57736ddcb9bf59910b319c1e02520fc3251e464755cb968c608",
+    "lines": 91
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/AnswerEvaluator.java",
+    "sha256": "4cf37124bec9d2786faa74ff87d408af43cd6533f061121e2bd0b2b8d8d82757",
+    "lines": 10
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/AnswerRevisionConflict.java",
+    "sha256": "212a3bf2ae9d0c45f391c0b5341c7ad77d4a3027dbc02ac2ad48ef3e21945849",
+    "lines": 16
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/AnswerService.java",
+    "sha256": "053a721a53a4eb21a5f4ad1a506e2b45006a758f5dc8613d4e5ea317dab542b1",
+    "lines": 93
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/AttemptService.java",
+    "sha256": "ed38024283f6d2e14caa7b494803dacb00b0c2d53763ae3dead8e882340aeeaf",
+    "lines": 99
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/AttemptStartTransaction.java",
+    "sha256": "8d55c48f2f9d6abcc4c808e6fa6188db8aeb8f25aa7bda82438e5d9d981fcb88",
+    "lines": 62
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/ExamAuthoringService.java",
+    "sha256": "abe2df346465c7bd42df554d76d364d065c326a05e6f12b298add65ffee1bff9",
+    "lines": 189
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/ExamAvailabilityPolicy.java",
+    "sha256": "7765c84e963dc84abb1c6f66b8ac976514888a80ac32f14f3db75efadf206510",
+    "lines": 41
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/ExamPublicationService.java",
+    "sha256": "02dfc4be09f55728bcc09c1552f2e6665dff2377fdb221607efb0c9bcc3af7a4",
+    "lines": 98
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/ExpiryRecovery.java",
+    "sha256": "83396b8abcd585a837801f44d61a103e0c148ae0563eef7168b804ae8f3cad38",
+    "lines": 75
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/FinalizationService.java",
+    "sha256": "125624fc0e274cc88a20179b48d58cf36ed8a840546687d61c6c06a6aab0d470",
+    "lines": 87
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/GradingService.java",
+    "sha256": "25f5aa90b0205de6a3a5f0470fd594b10a72d7b52364f3887cbe91a5e5169016",
+    "lines": 67
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/McqEvaluator.java",
+    "sha256": "5f763189904f5e1a45ecfe51b53db5c673172ca0bfaa43743318984e4709466e",
+    "lines": 35
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/ResultQueryService.java",
+    "sha256": "26cc01957af6ae5eb9ed9f9a0b67170ef3d8166ded5239252b7c3e8e25d0da0a",
+    "lines": 79
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/SessionRecoveryService.java",
+    "sha256": "36e2bb5519c47367d6ac9ed737c643f28d327d1b667b6ce6dc5aeddfa72bcf0c",
+    "lines": 118
+  },
+  {
+    "path": "src/main/java/com/onlineexam/service/StudentExamCatalogService.java",
+    "sha256": "ebc6f143041ebedc73a6c10552ad713a9beec9c495369bfbb72e45407dd572d5",
+    "lines": 58
+  },
+  {
+    "path": "tools/audit_secrets.py",
+    "sha256": "ee4e9a51413446007afc30f49cc18eb5ab9333d0539c0f4d2941bc9d8c77fe97",
+    "lines": 75
+  },
+  {
+    "path": "tools/check_dashboard_layouts.py",
+    "sha256": "bfb9a31d98bfd71986c4611640f5998b3f786c2370df918b3dd403635ac38140",
+    "lines": 109
+  },
+  {
+    "path": "tools/check_documentation.py",
+    "sha256": "5aa62d052d1a06362057b535dbfb11659a2fbe3e87f044ccc2883c0eea121c37",
+    "lines": 40
+  },
+  {
+    "path": "tools/check_keyboard_offline_ui.py",
+    "sha256": "f8ff542dfbb25ab1e4d31d1b17e94ffbf030459c2f58dd2754335f412747ed5d",
+    "lines": 135
+  },
+  {
+    "path": "tools/check_release_startup.ps1",
+    "sha256": "df99cb621ced73f643ff957975c3c072481e6709f8f3e92952ad4aa1559c4f95",
+    "lines": 53
+  },
+  {
+    "path": "tools/check_resilience_browser.py",
+    "sha256": "2bfa23c3268cda0cb46cfcdc1e50b44ddf651d0299f0c1d0c7f858f15aaff50b",
+    "lines": 143
+  },
+  {
+    "path": "tools/check_restart_recovery.ps1",
+    "sha256": "e425ee35e6d0a0f6a4b84ce796934a67a3f07aaecc93c477e8d96369908ac915",
+    "lines": 57
+  },
+  {
+    "path": "tools/check_restart_recovery.py",
+    "sha256": "1f89e821cad925f33de457a8921ed2b8c7a2205dbad03c04e754b134ca51e52a",
+    "lines": 132
+  },
+  {
+    "path": "tools/check_safe_text_ui.py",
+    "sha256": "56d8ad3987341ee45d3e4dd8dff09ed702f72b4ffffaca7950c50723166df868",
+    "lines": 117
+  },
+  {
+    "path": "tools/check_ten_student_pilot.py",
+    "sha256": "2a6180b042dd227c6bf7325504addf743123934b14eed868faf2149d42dcdf47",
+    "lines": 164
+  },
+  {
+    "path": "tools/check_test_selection.py",
+    "sha256": "731f990a2ce6525a3633415b0d7dcce0fb2d5dea7e851fce718b2c159802c20c",
+    "lines": 61
+  },
+  {
+    "path": "tools/DbProbe.java",
+    "sha256": "c9436b81c70383c9380834f2fa5641dafe00662fd0af7ab557d55a13c7a9b31b",
+    "lines": 38
+  },
+  {
+    "path": "tools/record_verification.mjs",
+    "sha256": "698a48e4aed1df4917edf2cec597c29d530507767e3e40f9573861fbdf86b1f2",
+    "lines": 73
+  },
+  {
+    "path": "tools/rehearse_clean_setup_backup.py",
+    "sha256": "f40540cb77eebc3c34a7e160c0be13eb5ad0d649726a253c3df2f6452ce78a25",
+    "lines": 165
+  },
+  {
+    "path": "tools/run_dashboard_checks.py",
+    "sha256": "a696b97cf33d156d9205a720b6b9f94b8ef72071f937c37743651fbdc619958f",
+    "lines": 108
+  },
+  {
+    "path": "tools/run_ten_student_pilot.ps1",
+    "sha256": "7aadb1f5760affed549b501792c3800f1e1fe3771a191b5f1c6fa653d98abded",
+    "lines": 37
+  },
+  {
+    "path": "tools/SeedStudentRoster.java",
+    "sha256": "66f8d74ceb4171f1bae4ade6bc87c184854a82b7ea1dc1d7062df85d13350cee",
+    "lines": 130
+  },
+  {
+    "path": "tools/smoke_auth.ps1",
+    "sha256": "646dc74c6bb1a6d577ba64009afa37aecbbe9431e9373db9ba7c44d0e59f5499",
+    "lines": 57
+  },
+  {
+    "path": "tools/source_manifest.py",
+    "sha256": "1f0629b0dbbde3c01704dc2493be2e54fb8314aff2f482eed7850c8c8639474e",
+    "lines": 18
+  },
+  {
+    "path": "tools/start-local.ps1",
+    "sha256": "1a4a603f698aad0631783db4a7a4b1de5bf09f6e7f793ddbb8d4d0aa0b64dc75",
+    "lines": 143
+  },
+  {
+    "path": "tools/stop-local.ps1",
+    "sha256": "a45f9d967bb15a4c66709950e99ac3b7f8b5d081b152a8a05f542db5cde782c6",
+    "lines": 20
+  },
+  {
+    "path": "tools/validate_trackers.mjs",
+    "sha256": "1b75a8a78b740112caf48d3141f84bfe820e8fca3bc9e18658088577fee1336b",
+    "lines": 197
+  },
+  {
+    "path": "e2e/package-lock.json",
+    "sha256": "9e1ab601323d1a312b4dea158770bbf5a4f4997b5a3049ffdd31d1ef0e60550b",
+    "lines": 60
+  },
+  {
+    "path": "e2e/package.json",
+    "sha256": "1c2d0802011d38733cefc31a58a999ba1254b5dcaeee3fd43b0e26521f85a6c7",
+    "lines": 13
+  },
+  {
+    "path": "e2e/playwright.config.js",
+    "sha256": "12779681e92ace37264fb0d76851ca7abc68ec89f0588c562bd8ae0f3ee4bace",
+    "lines": 60
+  },
+  {
+    "path": "e2e/tests/journey.spec.js",
+    "sha256": "93b2caabfd8f59308ce986e3ab13a03b80280487b442689bc2f2c5512e7deaa5",
+    "lines": 244
+  },
+  {
+    "path": "e2e/tests/smoke.spec.js",
+    "sha256": "2b476eaec2fdae9ebb36e02a2243d856b90baccf6bd8a3dcbc60d7837b052480",
+    "lines": 37
+  }
+]

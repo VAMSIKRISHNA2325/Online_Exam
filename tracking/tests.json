@@ -1,0 +1,562 @@
+{
+  "schema_version": 1,
+  "tests": [
+    {
+      "id": "T001",
+      "title": "Clean installation",
+      "requirement_ids": [
+        "R14"
+      ],
+      "kind": "setup",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Build from a clean isolated workspace, migrate an empty MySQL database and start the app.",
+      "expected_result": "Documented setup works without hidden local files.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T002",
+      "title": "Demo profile isolation",
+      "requirement_ids": [
+        "R01",
+        "R14"
+      ],
+      "kind": "integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Start normal and demo profiles against isolated databases.",
+      "expected_result": "Known demo users exist only when demo setup is explicitly selected.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T003",
+      "title": "Authentication and password storage",
+      "requirement_ids": [
+        "R01"
+      ],
+      "kind": "security",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Try correct/incorrect credentials and inspect fixture password storage.",
+      "expected_result": "Valid account authenticates; invalid credentials fail; plaintext passwords are absent.",
+      "latest_verification_id": "V0014"
+    },
+    {
+      "id": "T004",
+      "title": "CSRF enforcement",
+      "requirement_ids": [
+        "R01",
+        "R13"
+      ],
+      "kind": "security",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Run login and mutations with valid, missing and invalid CSRF tokens.",
+      "expected_result": "Valid flow works; missing/invalid tokens do not mutate data.",
+      "latest_verification_id": "V0014"
+    },
+    {
+      "id": "T005",
+      "title": "Role enforcement",
+      "requirement_ids": [
+        "R01",
+        "R13"
+      ],
+      "kind": "security",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Call all instructor mutations as a student and protected routes anonymously.",
+      "expected_result": "Server denies access without relying on hidden UI controls.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T006",
+      "title": "Instructor ownership",
+      "requirement_ids": [
+        "R02",
+        "R10"
+      ],
+      "kind": "security",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Use instructor B to access/change instructor A exam, results, events and recovery.",
+      "expected_result": "No cross-instructor read/write or recovery is allowed.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T007",
+      "title": "Draft authoring",
+      "requirement_ids": [
+        "R02"
+      ],
+      "kind": "integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Create, read, update and delete owned draft questions/exams using real MySQL.",
+      "expected_result": "CRUD persists correct values and validates malformed fields.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T008",
+      "title": "Publish validation",
+      "requirement_ids": [
+        "R03"
+      ],
+      "kind": "unit+integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Publish empty papers, invalid options/keys/marks/windows, then a valid paper.",
+      "expected_result": "Invalid drafts stay draft; the valid paper publishes atomically.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T009",
+      "title": "Publish/edit race and freeze",
+      "requirement_ids": [
+        "R03"
+      ],
+      "kind": "concurrency",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Race publication with edits; then attempt all published mutations.",
+      "expected_result": "No partial paper publishes and no published content/timing/key changes.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T010",
+      "title": "Exam catalog and availability",
+      "requirement_ids": [
+        "R04"
+      ],
+      "kind": "integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "List as student and attempt starts before opening, during window and at closing.",
+      "expected_result": "Drafts/keys stay hidden; only the valid window permits a new start.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T011",
+      "title": "Repeated and concurrent starts",
+      "requirement_ids": [
+        "R05"
+      ],
+      "kind": "concurrency",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Start the same exam concurrently with distinct connections for one student.",
+      "expected_result": "One attempt row exists; returned IDs and original deadline agree.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T012",
+      "title": "Student payload confidentiality",
+      "requirement_ids": [
+        "R01",
+        "R06",
+        "R10"
+      ],
+      "kind": "security",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Inspect student HTML and all API payloads throughout an attempt/result.",
+      "expected_result": "No answer keys, correct flags, password hashes or other-user data appear.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T013",
+      "title": "Save/clear and relationship validation",
+      "requirement_ids": [
+        "R06"
+      ],
+      "kind": "integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Save, clear and reload answers; submit foreign question/option IDs.",
+      "expected_result": "Valid choices persist; null clears; foreign relationships fail.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T014",
+      "title": "Stale and reordered saves",
+      "requirement_ids": [
+        "R06",
+        "R07"
+      ],
+      "kind": "concurrency",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Send old expected revisions after newer saved selections, including two tabs.",
+      "expected_result": "Stale writes conflict and cannot overwrite the newer accepted answer.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T015",
+      "title": "Refresh and client-clock tampering",
+      "requirement_ids": [
+        "R07"
+      ],
+      "kind": "browser",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Save, refresh, change displayed client time and resume.",
+      "expected_result": "Server-confirmed selections and original deadline remain authoritative.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T016",
+      "title": "Deadline boundaries",
+      "requirement_ids": [
+        "R07",
+        "R08"
+      ],
+      "kind": "unit+integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Test before, exactly at and after deadline including lock wait crossing deadline.",
+      "expected_result": "Only pre-deadline authoritative checks accept answers; no extra time is granted.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T017",
+      "title": "Independent scoring fixtures",
+      "requirement_ids": [
+        "R09"
+      ],
+      "kind": "unit+integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Grade all-correct, mixed, all-wrong, unanswered and cleared fixtures.",
+      "expected_result": "Persisted totals match independent hand calculations; client score fields are ignored.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T018",
+      "title": "Repeated submit",
+      "requirement_ids": [
+        "R08",
+        "R09"
+      ],
+      "kind": "integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Submit twice and repeat after a simulated lost response.",
+      "expected_result": "Same immutable terminal state and result return without duplicate grading.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T019",
+      "title": "Save/submit/timeout races",
+      "requirement_ids": [
+        "R08",
+        "R09"
+      ],
+      "kind": "concurrency",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Race independent save, submit and expiry transactions using a barrier.",
+      "expected_result": "One valid final state/score persists; no answer changes after finalization.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T020",
+      "title": "Closed browser timeout",
+      "requirement_ids": [
+        "R08"
+      ],
+      "kind": "integration+browser",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Close the browser without submitting and wait through controlled server expiry.",
+      "expected_result": "Server finalizes saved answers without a browser callback.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T021",
+      "title": "Restart and overdue recovery",
+      "requirement_ids": [
+        "R07",
+        "R08",
+        "R09"
+      ],
+      "kind": "integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Restart the app with live and overdue persisted attempts.",
+      "expected_result": "Answers/results remain; original deadlines remain; overdue attempts finalize.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T022",
+      "title": "Duplicate login policy",
+      "requirement_ids": [
+        "R11"
+      ],
+      "kind": "security+concurrency",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Use sequential and near-simultaneous logins from separate browser sessions.",
+      "expected_result": "Only one student session succeeds; rejected login does not invalidate the first.",
+      "latest_verification_id": "V0016"
+    },
+    {
+      "id": "T023",
+      "title": "Supervised session recovery",
+      "requirement_ids": [
+        "R07",
+        "R11",
+        "R12"
+      ],
+      "kind": "security+browser",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Owning instructor resets a current lost-session attempt; also try historic/terminal and cross-instructor active-attempt resets, plus concurrent reset/login.",
+      "expected_result": "Only scoped current recovery succeeds under the per-student lock; old session fails, same answers/deadline resume, and event is audited. Historic/cross-owner recovery is denied.",
+      "latest_verification_id": "V0037"
+    },
+    {
+      "id": "T024",
+      "title": "Student record isolation",
+      "requirement_ids": [
+        "R01",
+        "R10"
+      ],
+      "kind": "security",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Student B requests student A attempt, answer mutation and result.",
+      "expected_result": "All cross-student access is denied without data disclosure.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T025",
+      "title": "Event scoping and quality",
+      "requirement_ids": [
+        "R10",
+        "R12"
+      ],
+      "kind": "integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Generate denied-login and recovery events then query as both instructors/student.",
+      "expected_result": "Only authorized relevant events are visible; metadata contains no credentials/tokens.",
+      "latest_verification_id": "V0037"
+    },
+    {
+      "id": "T026",
+      "title": "Database failure and rollback",
+      "requirement_ids": [
+        "R06",
+        "R08",
+        "R09"
+      ],
+      "kind": "integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Force a test write/commit failure inside save and finalization.",
+      "expected_result": "No false saved/success message or partial final result; retry can recover.",
+      "latest_verification_id": "V0039"
+    },
+    {
+      "id": "T027",
+      "title": "Complete real browser journey",
+      "requirement_ids": [
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R08",
+        "R09",
+        "R10"
+      ],
+      "kind": "browser",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Instructor creates/publishes; student logs in, saves, refreshes, submits; instructor reviews.",
+      "expected_result": "All screens use real APIs/MySQL and independently expected score appears.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T028",
+      "title": "Keyboard and responsive UI",
+      "requirement_ids": [
+        "R06",
+        "R13"
+      ],
+      "kind": "browser+manual",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Use keyboard-only navigation and inspect approximately 360px and desktop layouts.",
+      "expected_result": "Controls are labeled/reachable, focus visible, and exam content is not clipped.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T029",
+      "title": "Offline/pending-save feedback",
+      "requirement_ids": [
+        "R06",
+        "R07"
+      ],
+      "kind": "browser",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Fail a save, disconnect, retry before expiry and attempt submit with pending work.",
+      "expected_result": "UI distinguishes pending/failed/saved; no silent answer loss or post-expiry acceptance.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T030",
+      "title": "Safe text and SQL handling",
+      "requirement_ids": [
+        "R01",
+        "R13"
+      ],
+      "kind": "security",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Use HTML/script-like question text and SQL-like login/form input in disposable fixtures.",
+      "expected_result": "Input is treated as data; no script execution or SQL injection occurs.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T031",
+      "title": "Logout and session fixation",
+      "requirement_ids": [
+        "R01",
+        "R11"
+      ],
+      "kind": "security",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Compare pre/post-login session and CSRF state; logout; simulate idle session expiry with no attempt and subsequent login.",
+      "expected_result": "Session fixation and logout are protected; refreshed CSRF flow works; inactive registry cleanup permits pre-attempt lost-cookie recovery after the documented timeout.",
+      "latest_verification_id": "V0025"
+    },
+    {
+      "id": "T032",
+      "title": "Backup/restore rehearsal",
+      "requirement_ids": [
+        "R09",
+        "R14"
+      ],
+      "kind": "setup",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Back up a disposable demo DB and restore to a separate disposable DB.",
+      "expected_result": "Exam records, answers and scores match; no normal database is reset.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T033",
+      "title": "Ten-student pilot",
+      "requirement_ids": [
+        "R13"
+      ],
+      "kind": "pilot",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Run about ten distinct student accounts concurrently and reconcile saved answers/results.",
+      "expected_result": "All acknowledged writes and scores are accounted for; actual conditions/timings recorded.",
+      "latest_verification_id": "V0042"
+    },
+    {
+      "id": "T034",
+      "title": "Documentation run-through",
+      "requirement_ids": [
+        "R14"
+      ],
+      "kind": "manual",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Follow README, provisioning, demo, recovery and troubleshooting instructions from scratch.",
+      "expected_result": "Paths, commands, URLs and expected behavior match the actual build.",
+      "latest_verification_id": "V0063"
+    },
+    {
+      "id": "T035",
+      "title": "Secrets and safe errors",
+      "requirement_ids": [
+        "R01",
+        "R13",
+        "R14"
+      ],
+      "kind": "security+review",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Inspect tracked files, sanitized runtime logs and deliberately failed requests.",
+      "expected_result": "No real secrets, raw session tokens, SQL traces or known demo credentials in normal config.",
+      "latest_verification_id": "V0063"
+    },
+    {
+      "id": "T036",
+      "title": "User provisioning",
+      "requirement_ids": [
+        "R01",
+        "R14"
+      ],
+      "kind": "integration",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Use the documented local provisioning flow, duplicate names and invalid roles.",
+      "expected_result": "Accounts persist with encoded passwords; untrusted input cannot grant instructor rights.",
+      "latest_verification_id": "V0013"
+    },
+    {
+      "id": "T037",
+      "title": "Required tests actually execute",
+      "requirement_ids": [
+        "R13"
+      ],
+      "kind": "build",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Inspect Maven/Playwright reports, configured suite selections, profiles and test counts on a real run.",
+      "expected_result": "All configured Java/HTTP/MySQL/browser checks selected for the run actually execute; skipped/zero-test success or missing MySQL cannot satisfy that run. Separate manual/setup checks retain their own status.",
+      "latest_verification_id": "V0063"
+    },
+    {
+      "id": "T038",
+      "title": "Release package startup",
+      "requirement_ids": [
+        "R14"
+      ],
+      "kind": "setup",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Build the release artifact and run it using the documented configuration.",
+      "expected_result": "Packaged application starts and the smoke workflow succeeds.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T039",
+      "title": "No dead UI actions or console errors",
+      "requirement_ids": [
+        "R06",
+        "R10",
+        "R13"
+      ],
+      "kind": "browser",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Exercise all required screen actions and inspect browser console/network failures.",
+      "expected_result": "No dummy actions, fake success or unhandled errors remain.",
+      "latest_verification_id": "V0062"
+    },
+    {
+      "id": "T040",
+      "title": "Bounded login throttling",
+      "requirement_ids": [
+        "R01",
+        "R13"
+      ],
+      "kind": "security",
+      "required": true,
+      "status": "PASS",
+      "procedure": "Trigger configured login throttling, then verify documented recovery behavior.",
+      "expected_result": "Repeated failures are bounded; normal permitted users can recover without bypassing auth.",
+      "latest_verification_id": "V0023"
+    }
+  ]
+}

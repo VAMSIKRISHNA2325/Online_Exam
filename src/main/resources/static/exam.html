@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta content="#f3f4f6" name="theme-color">
+    <title>Examination · Examroom</title>
+    <link href="/assets/app.css" rel="stylesheet">
+    <script src="/assets/exam.js" type="module"></script>
+  </head>
+  <body class="exam-page">
+    <div class="app-frame">
+      <header class="exam-header">
+        <a aria-label="Return to student dashboard" class="wordmark dark-wordmark" href="/student.html"><span aria-hidden="true" class="wordmark-icon">E</span><span>Examroom</span></a>
+        <span class="exam-header-label">Examination in progress</span>
+        <div aria-live="off" class="timer-box" role="timer"><span>Time remaining</span><strong id="timer">--:--</strong></div>
+      </header>
+      <div class="loading-state exam-loading" id="attempt-loading" role="status">Loading your examination...</div>
+      <div class="notice error-notice exam-global-error" hidden id="attempt-error" role="alert"></div>
+      <div class="notice error-notice exam-global-error" hidden id="connection-notice" role="status"></div>
+      <main aria-labelledby="exam-title" class="exam-layout" hidden id="exam-layout">
+        <aside aria-label="Question navigation" class="exam-sidebar">
+          <p class="section-number">Question navigation</p>
+          <h1 id="exam-title"></h1>
+          <p class="exam-progress" id="exam-progress"></p>
+          <div class="question-navigation" id="question-navigation"></div>
+          <div class="exam-sidebar-bottom">
+            <span>Deadline</span>
+            <strong id="deadline-info"></strong>
+            <p>Your original deadline stays the same after a refresh.</p>
+            <a href="/student.html">Back to student dashboard </a>
+          </div>
+        </aside>
+        <section aria-labelledby="question-title" class="exam-content">
+          <div class="exam-content-top"><span id="question-number">QUESTION 01</span><span id="question-marks"></span></div>
+          <div class="question-panel" id="question-panel">
+            <div class="question-heading">
+              <p class="section-number">Select one answer</p>
+              <h2 id="question-title"></h2>
+            </div>
+            <fieldset class="answer-fieldset">
+              <legend class="sr-only">Answer options</legend>
+              <div id="answer-options"></div>
+            </fieldset>
+            <div class="answer-footer"><button class="text-button-inline" id="clear-answer" type="button">Clear my answer</button><span aria-live="polite" class="answer-save-state" id="save-state" role="status">Not answered</span></div>
+            <div class="notice error-notice" hidden id="save-error" role="alert"></div>
+            <button class="outline-button" hidden id="retry-save" type="button">Retry unsaved answer </button>
+          </div>
+          <div class="exam-navigation" id="exam-navigation">
+            <button class="outline-button" id="previous-question" type="button">← Previous</button>
+            <button class="primary-button compact-button" id="next-question" type="button"><span>Next question</span></button>
+            <button class="outline-button submit-attempt" id="submit-attempt" type="button">Submit examination</button>
+          </div>
+          <p aria-live="polite" class="submission-note" id="submission-note" role="status"></p>
+          <div class="terminal-panel" hidden id="terminal-panel">
+            <h2>This attempt has ended.</h2>
+            <p>Your saved work and original deadline are preserved. The result will appear in your student dashboard when finalization is complete.</p>
+            <div class="result-summary" hidden id="result-summary">
+              <div><span>YOUR SCORE</span><strong id="result-score"></strong></div>
+              <div><span>PERCENTAGE</span><strong id="result-percentage"></strong></div>
+              <div><span>STATUS</span><strong id="result-status"></strong></div>
+            </div>
+            <p class="result-finalized" id="result-finalized"></p>
+            <button class="outline-button" hidden id="retry-result" type="button">Check result again</button>
+            <a class="outline-button" href="/student.html">Return to student dashboard</a>
+          </div>
+        </section>
+      </main>
+    </div>
+    <dialog aria-labelledby="submit-dialog-title" class="exam-dialog submit-dialog" id="submit-dialog">
+      <p class="section-number">FINAL STEP</p>
+      <h2 id="submit-dialog-title">Ready to submit?</h2>
+      <p class="dialog-description" id="submit-summary"></p>
+      <p class="dialog-description">Your saved answers will be graded now. You cannot change them after submission.</p>
+      <div class="notice error-notice" hidden id="submit-dialog-error" role="alert"></div>
+      <div class="dialog-actions">
+        <button class="outline-button" id="cancel-submit" type="button">Keep reviewing</button>
+        <button class="primary-button compact-button" id="confirm-submit" type="button"><span>Submit now</span></button>
+      </div>
+    </dialog>
+  </body>
+</html>

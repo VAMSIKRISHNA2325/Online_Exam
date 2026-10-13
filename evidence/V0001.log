@@ -1,0 +1,18 @@
+2026-09-29 P00-01 workspace/environment inspection
+rg --files: 14 initial specification/tracker files; no application code.
+git status --short: fatal: not a git repository.
+node -v: v24.13.1
+npm.cmd -v: 11.8.0
+git --version: git version 2.53.0.windows.1
+java -version: command not found
+mvn -version: command not found
+mysql --version: command not found
+docker --version: Docker version 29.7.2
+docker info: permission denied connecting to npipe:////./pipe/docker_engine
+Edge: 154.0.4258.37; Chrome: 153.0.8010.54
+No MySQL service or 3306/8080 listener observed.
+curl.exe -I Maven Central in restricted shell: failed to connect.
+curl.exe -I Maven Central with sandbox escalation: HTTP/1.1 200 OK.
+node tools/validate_trackers.mjs: structureValid=true, 0/48 core VERIFIED, 0/40 checks PASS.
+Portable Temurin 21.0.12.1+1 downloaded and SHA-256 matched Adoptium API.
+Portable Maven 3.9.16 version command passed with JAVA_HOME set to the portable JDK.

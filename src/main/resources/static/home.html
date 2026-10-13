@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta content="#f3f4f6" name="theme-color">
+    <title>Dashboard | Examroom</title>
+    <link href="/assets/app.css" rel="stylesheet">
+    <script src="/assets/home.js" type="module"></script>
+  </head>
+  <body class="home-page">
+    <div class="app-frame">
+      <header class="app-header">
+        <a aria-label="Examroom dashboard" class="wordmark" href="/home.html"><span aria-hidden="true" class="wordmark-icon">E</span><span>Examroom</span></a>
+        <nav aria-label="Main navigation" class="header-nav"><a aria-current="page" href="/home.html">Dashboard</a><a hidden href="/instructor.html" id="home-instructor-nav">Examinations</a><a hidden href="/student.html" id="home-student-nav">Examinations</a></nav>
+        <div class="header-right"><button class="outline-button" disabled id="sign-out" type="button">Sign out</button></div>
+      </header>
+      <main aria-labelledby="home-title" class="home-main">
+        <div class="page-heading">
+          <h1 id="home-title">Dashboard</h1>
+          <p>Welcome, <span id="display-name"></span>.</p>
+        </div>
+        <div class="notice error-notice" hidden id="account-error" role="alert"></div>
+        <section aria-label="Account overview" class="account-content" hidden id="account-content">
+          <div class="account-grid">
+            <div class="account-item"><span>Username</span><strong id="account-username"></strong></div>
+            <div class="account-item"><span>Account role</span><strong id="account-role"></strong></div>
+            <div class="account-item"><span>Session status</span><strong>Active</strong></div>
+          </div>
+          <section aria-labelledby="workspace-title" class="dashboard-panel">
+            <h2 id="workspace-title">Examinations</h2>
+            <p class="home-subtitle" id="role-message"></p>
+            <a class="primary-button workspace-link" hidden href="/instructor.html" id="instructor-link">Manage examinations</a>
+            <a class="primary-button workspace-link" hidden href="/student.html" id="student-link">View examinations</a>
+          </section>
+        </section>
+        <div class="loading-state" id="account-loading" role="status">Loading your account...</div>
+      </main>
+      <footer class="app-footer"><span>Online Examination System</span><span>Account dashboard</span></footer>
+    </div>
+  </body>
+</html>

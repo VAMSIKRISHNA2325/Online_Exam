@@ -1,0 +1,2592 @@
+{
+  "schema_version": 1,
+  "project": "Online Examination System",
+  "implementation_status": "CORE_COMPLETE",
+  "deployment_status": "NOT_REQUESTED",
+  "tasks": [
+    {
+      "id": "P00-01",
+      "phase": "P00",
+      "title": "Inspect workspace and execution environment",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Record existing work, JDK, Maven, MySQL/Docker, browser tooling and actual access limits."
+      ],
+      "deliverables": [
+        "docs/ENVIRONMENT.md"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0001"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "docs/ENVIRONMENT.md",
+        ".gitignore"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P00-02",
+      "phase": "P00",
+      "title": "Freeze scope, API rules and assumptions",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07",
+        "R08",
+        "R09",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14"
+      ],
+      "dependencies": [
+        "P00-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Map R01-R14, preserve fixed stack, record decisions and unresolved real contradictions."
+      ],
+      "deliverables": [
+        "docs/REQUIREMENTS.md",
+        "docs/DECISIONS.md"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0002"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "docs/REQUIREMENTS.md",
+        "docs/DECISIONS.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P00-03",
+      "phase": "P00",
+      "title": "Pin compatible toolchain and dependency versions",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [
+        "P00-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Record exact verified versions and dependency compatibility without floating version placeholders."
+      ],
+      "deliverables": [
+        "docs/ENVIRONMENT.md",
+        "planned build config"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0003",
+        "V0008"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "docs/ENVIRONMENT.md",
+        "docs/DECISIONS.md",
+        "tracking/RISKS.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P00-04",
+      "phase": "P00",
+      "title": "Initialize and validate durable trackers",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R13",
+        "R14"
+      ],
+      "dependencies": [
+        "P00-02"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Tracker validation passes; all initial app checks remain NOT_RUN and observed blockers are recorded honestly."
+      ],
+      "deliverables": [
+        "tracking/",
+        "tools/validate_trackers.mjs"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0004"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "tools/validate_trackers.mjs",
+        "tools/record_verification.mjs",
+        "tracking/STATE_CONTRACT.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P01-01",
+      "phase": "P01",
+      "title": "Create Maven Java application and profiles",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [
+        "P00-03",
+        "P00-04"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Application compiles; profile configuration keeps credentials external."
+      ],
+      "deliverables": [
+        "pom.xml",
+        "wrappers",
+        "application configuration"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0005"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "pom.xml",
+        "mvnw",
+        "mvnw.cmd",
+        ".mvn/wrapper/maven-wrapper.jar",
+        ".mvn/wrapper/maven-wrapper.properties",
+        "src/main/java/com/onlineexam/OnlineExamApplication.java",
+        "src/main/java/com/onlineexam/config/TimeConfig.java",
+        "src/main/resources/application.yml"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P01-02",
+      "phase": "P01",
+      "title": "Prepare isolated MySQL and runtime connectivity",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [
+        "P01-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Actual MySQL connection succeeds with safe database separation."
+      ],
+      "deliverables": [
+        "compose.yaml",
+        "native-MySQL instructions",
+        ".env.example"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0006"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "compose.yaml",
+        "docker/mysql/init/01-schemas.sh",
+        ".env.example",
+        "docs/DATABASE_SETUP.md",
+        "tools/DbProbe.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P01-03",
+      "phase": "P01",
+      "title": "Implement readiness and safe API error structure",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R13",
+        "R14"
+      ],
+      "dependencies": [
+        "P01-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Readiness reflects dependencies; errors are stable and do not leak internals."
+      ],
+      "deliverables": [
+        "health/readiness and error handlers"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0007"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/config/SecurityConfig.java",
+        "src/main/java/com/onlineexam/controller/ApiError.java",
+        "src/main/java/com/onlineexam/controller/ApiException.java",
+        "src/main/java/com/onlineexam/controller/ApiExceptionHandler.java",
+        "src/main/java/com/onlineexam/controller/ReadinessController.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P01-04",
+      "phase": "P01",
+      "title": "Prepare meaningful Java/HTTP/integration test harness",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R13"
+      ],
+      "dependencies": [
+        "P01-02",
+        "P01-03"
+      ],
+      "owner": "test_harness",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "A real MySQL check executes and fails clearly if required infrastructure is absent."
+      ],
+      "deliverables": [
+        "test configuration and Maven profiles"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0009"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/test/java/com/onlineexam/controller/ReadinessControllerTest.java",
+        "src/test/java/com/onlineexam/controller/ReadinessHttpTest.java",
+        "src/test/java/com/onlineexam/MySqlReadinessIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P02-01",
+      "phase": "P02",
+      "title": "Create versioned schema and integrity constraints",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R02",
+        "R05",
+        "R06",
+        "R08",
+        "R09",
+        "R12"
+      ],
+      "dependencies": [
+        "P01-04",
+        "P00-02"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Fresh MySQL schema contains expected foreign keys, uniqueness and indexes; applied migrations are preserved."
+      ],
+      "deliverables": [
+        "Flyway migrations"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0010"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/resources/db/migration/V1__exam_schema.sql",
+        "src/test/java/com/onlineexam/SchemaIT.java",
+        "docs/DECISIONS.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P02-02",
+      "phase": "P02",
+      "title": "Implement domain classes and JDBC repositories",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R02",
+        "R05",
+        "R06",
+        "R09"
+      ],
+      "dependencies": [
+        "P02-01"
+      ],
+      "owner": "test_harness",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Real database CRUD and rollback checks pass; OOP responsibilities are separated."
+      ],
+      "deliverables": [
+        "domain and repository packages"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0011"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/domain/Answer.java",
+        "src/main/java/com/onlineexam/domain/AnswerRevision.java",
+        "src/main/java/com/onlineexam/domain/Attempt.java",
+        "src/main/java/com/onlineexam/domain/AttemptStatus.java",
+        "src/main/java/com/onlineexam/domain/Exam.java",
+        "src/main/java/com/onlineexam/domain/ExamStatus.java",
+        "src/main/java/com/onlineexam/domain/Question.java",
+        "src/main/java/com/onlineexam/domain/QuestionOption.java",
+        "src/main/java/com/onlineexam/domain/Role.java",
+        "src/main/java/com/onlineexam/domain/SecurityEvent.java",
+        "src/main/java/com/onlineexam/domain/User.java",
+        "src/main/java/com/onlineexam/repository/AnswerRepository.java",
+        "src/main/java/com/onlineexam/repository/AttemptRepository.java",
+        "src/main/java/com/onlineexam/repository/ExamRepository.java",
+        "src/main/java/com/onlineexam/repository/JdbcValues.java",
+        "src/main/java/com/onlineexam/repository/QuestionOptionRepository.java",
+        "src/main/java/com/onlineexam/repository/QuestionRepository.java",
+        "src/main/java/com/onlineexam/repository/SecurityEventRepository.java",
+        "src/main/java/com/onlineexam/repository/UserRepository.java",
+        "src/test/java/com/onlineexam/RepositoryIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P02-03",
+      "phase": "P02",
+      "title": "Create isolated demo fixtures and provisioning flow",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R01",
+        "R14"
+      ],
+      "dependencies": [
+        "P02-02"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Demo data only loads explicitly; credentials are encoded and provisioning is local/documented."
+      ],
+      "deliverables": [
+        "demo fixture loader",
+        "account provisioning"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0013"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/config/PasswordConfig.java",
+        "src/main/java/com/onlineexam/config/DemoAccountsRunner.java",
+        "src/main/java/com/onlineexam/config/ProvisionAccountRunner.java",
+        "src/main/java/com/onlineexam/config/SecurityConfig.java",
+        "src/main/java/com/onlineexam/service/AccountProvisioningService.java",
+        "src/main/resources/application-provision.yml",
+        "src/test/java/com/onlineexam/AccountProvisioningIT.java",
+        "docs/ACCOUNTS.md",
+        "tools/check_demo_accounts.sh"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T002",
+        "T036"
+      ]
+    },
+    {
+      "id": "P02-04",
+      "phase": "P02",
+      "title": "Document and verify persistence contract",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R13",
+        "R14"
+      ],
+      "dependencies": [
+        "P02-02"
+      ],
+      "owner": "persistence_docs",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Schema/relationship documentation matches actual migrations and repository behavior."
+      ],
+      "deliverables": [
+        "docs/DATABASE.md",
+        "ER diagram"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0012"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "docs/DATABASE.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P03-01",
+      "phase": "P03",
+      "title": "Implement login/logout, CSRF and password security",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R01"
+      ],
+      "dependencies": [
+        "P02-03"
+      ],
+      "owner": "authentication",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Valid auth works; incorrect credentials, bad CSRF and invalidated sessions fail."
+      ],
+      "deliverables": [
+        "SecurityConfig",
+        "authentication pages/API"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0014"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/config/SecurityConfig.java",
+        "src/main/java/com/onlineexam/security/ExamPrincipal.java",
+        "src/main/java/com/onlineexam/controller/AuthenticationController.java",
+        "src/test/java/com/onlineexam/controller/ReadinessHttpTest.java",
+        "src/test/java/com/onlineexam/controller/AuthenticationHttpTest.java",
+        "src/test/java/com/onlineexam/AuthenticationIT.java",
+        "src/test/java/com/onlineexam/security/ExamPrincipalTest.java",
+        "tools/smoke_auth.ps1"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T003",
+        "T004",
+        "T031"
+      ]
+    },
+    {
+      "id": "P03-02",
+      "phase": "P03",
+      "title": "Implement roles, ownership and safe DTO boundaries",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R01",
+        "R10"
+      ],
+      "dependencies": [
+        "P03-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Access controls operate on authenticated identity; role attacks and owned-resource boundaries are tested as routes are added."
+      ],
+      "deliverables": [
+        "authorization services and DTOs"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0015",
+        "V0028"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/service/AccessControl.java",
+        "src/main/java/com/onlineexam/dto/QuestionViews.java",
+        "src/test/java/com/onlineexam/AccessControlIT.java",
+        "src/test/java/com/onlineexam/dto/QuestionViewsTest.java",
+        "src/test/java/com/onlineexam/InstructorRoleEnforcementIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T005"
+      ]
+    },
+    {
+      "id": "P03-03",
+      "phase": "P03",
+      "title": "Enforce one student session and duplicate-login audit",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R11",
+        "R12"
+      ],
+      "dependencies": [
+        "P03-01",
+        "P02-01"
+      ],
+      "owner": "authentication",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Sequential and near-simultaneous duplicate logins retain one valid first session and log rejection."
+      ],
+      "deliverables": [
+        "session configuration and event recording"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0016",
+        "V0025"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/config/SecurityConfig.java",
+        "src/main/java/com/onlineexam/security/LoginSerializingFilter.java",
+        "src/main/java/com/onlineexam/security/DuplicateLoginAudit.java",
+        "src/test/java/com/onlineexam/controller/AuthenticationHttpTest.java",
+        "src/test/java/com/onlineexam/controller/ReadinessHttpTest.java",
+        "src/test/java/com/onlineexam/StudentSessionIT.java",
+        "src/test/java/com/onlineexam/StudentSessionExpiryIT.java",
+        "src/test/java/com/onlineexam/IntegrationDb.java",
+        "src/test/java/com/onlineexam/SessionAndCsrfLifecycleIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T022"
+      ]
+    },
+    {
+      "id": "P03-04",
+      "phase": "P03",
+      "title": "Build login UI and current-user flow",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R01"
+      ],
+      "dependencies": [
+        "P03-01",
+        "P03-02",
+        "P03-03"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Login/logout and current-user screens use real sessions and readable errors."
+      ],
+      "deliverables": [
+        "login.html",
+        "auth JavaScript"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0018"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/config/SecurityConfig.java",
+        "src/main/resources/static/index.html",
+        "src/main/resources/static/login.html",
+        "src/main/resources/static/home.html",
+        "src/main/resources/static/assets/app.css",
+        "src/main/resources/static/assets/auth.js",
+        "src/main/resources/static/assets/login.js",
+        "src/main/resources/static/assets/home.js"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T003",
+        "T004",
+        "T031"
+      ]
+    },
+    {
+      "id": "P04-01",
+      "phase": "P04",
+      "title": "Implement instructor draft CRUD and editor contract",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R02"
+      ],
+      "dependencies": [
+        "P03-02",
+        "P02-02"
+      ],
+      "owner": "repository_finish",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Owned draft CRUD persists to MySQL; other instructors/students cannot mutate drafts."
+      ],
+      "deliverables": [
+        "exam/question endpoints"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0017"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/dto/AuthoringRequests.java",
+        "src/main/java/com/onlineexam/dto/AuthoringViews.java",
+        "src/main/java/com/onlineexam/service/ExamAuthoringService.java",
+        "src/main/java/com/onlineexam/controller/ExamAuthoringController.java",
+        "src/test/java/com/onlineexam/ExamAuthoringIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T006",
+        "T007"
+      ]
+    },
+    {
+      "id": "P04-02",
+      "phase": "P04",
+      "title": "Implement publication validation and immutable paper",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R03"
+      ],
+      "dependencies": [
+        "P04-01"
+      ],
+      "owner": "repository_finish",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Invalid drafts cannot publish; publication/edit race preserves a complete frozen paper."
+      ],
+      "deliverables": [
+        "publish service and validations"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0019"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/service/ExamPublicationService.java",
+        "src/main/java/com/onlineexam/controller/ExamPublicationController.java",
+        "src/test/java/com/onlineexam/ExamPublicationIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T008",
+        "T009"
+      ]
+    },
+    {
+      "id": "P04-03",
+      "phase": "P04",
+      "title": "Build instructor dashboard and draft editor",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R02",
+        "R03"
+      ],
+      "dependencies": [
+        "P04-01",
+        "P04-02",
+        "P03-04"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Create/edit/delete/validate/publish controls call real APIs and show returned errors."
+      ],
+      "deliverables": [
+        "instructor dashboard/editor HTML CSS JS"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0021"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/resources/static/instructor.html",
+        "src/main/resources/static/assets/instructor.js",
+        "src/main/resources/static/assets/app.css",
+        "src/main/resources/static/assets/auth.js",
+        "src/main/resources/static/home.html",
+        "src/main/resources/static/assets/home.js",
+        "src/main/java/com/onlineexam/config/SecurityConfig.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T007",
+        "T008"
+      ]
+    },
+    {
+      "id": "P04-04",
+      "phase": "P04",
+      "title": "Implement student catalog and availability policy",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R04"
+      ],
+      "dependencies": [
+        "P04-02",
+        "P03-02"
+      ],
+      "owner": "repository_finish",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Student list omits drafts/keys; opening and closing boundaries are enforced."
+      ],
+      "deliverables": [
+        "exam catalog and availability service"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0020"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/service/ExamAvailabilityPolicy.java",
+        "src/main/java/com/onlineexam/service/StudentExamCatalogService.java",
+        "src/main/java/com/onlineexam/dto/StudentExamView.java",
+        "src/main/java/com/onlineexam/controller/StudentExamCatalogController.java",
+        "src/test/java/com/onlineexam/StudentExamCatalogIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T010",
+        "T012"
+      ]
+    },
+    {
+      "id": "P05-01",
+      "phase": "P05",
+      "title": "Implement unique start/resume and deadline",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R05",
+        "R07"
+      ],
+      "dependencies": [
+        "P04-04"
+      ],
+      "owner": "repository_finish",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Repeated and concurrent starts converge without changing the original deadline."
+      ],
+      "deliverables": [
+        "AttemptService start/read"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0022"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/dto/StudentAttemptView.java",
+        "src/main/java/com/onlineexam/dto/StudentAttemptSummary.java",
+        "src/main/java/com/onlineexam/service/AttemptStartTransaction.java",
+        "src/main/java/com/onlineexam/service/AttemptService.java",
+        "src/main/java/com/onlineexam/controller/StudentAttemptController.java",
+        "src/test/java/com/onlineexam/AttemptStartIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T010",
+        "T011"
+      ]
+    },
+    {
+      "id": "P05-02",
+      "phase": "P05",
+      "title": "Implement transactional save/clear and answer revision",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R06"
+      ],
+      "dependencies": [
+        "P05-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Authorized valid answer saves/clears commit; stale and foreign writes fail."
+      ],
+      "deliverables": [
+        "answer save endpoints/repository"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0026"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/dto/AnswerSaveRequest.java",
+        "src/main/java/com/onlineexam/dto/StudentAnswerView.java",
+        "src/main/java/com/onlineexam/service/AnswerRevisionConflict.java",
+        "src/main/java/com/onlineexam/service/AnswerService.java",
+        "src/main/java/com/onlineexam/controller/StudentAnswerController.java",
+        "src/test/java/com/onlineexam/AnswerSaveIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T013",
+        "T014"
+      ]
+    },
+    {
+      "id": "P05-03",
+      "phase": "P05",
+      "title": "Implement secure resume payload and server timestamps",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R07",
+        "R10"
+      ],
+      "dependencies": [
+        "P05-01",
+        "P05-02"
+      ],
+      "owner": "repository_finish",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Original deadline and saved answers return only to their owner, with no key leakage."
+      ],
+      "deliverables": [
+        "attempt read DTO"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0029"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/test/java/com/onlineexam/AttemptResumeIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T012",
+        "T024"
+      ]
+    },
+    {
+      "id": "P05-04",
+      "phase": "P05",
+      "title": "Verify deadline and save-rollback invariants",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R06",
+        "R07",
+        "R08"
+      ],
+      "dependencies": [
+        "P05-02",
+        "P05-03"
+      ],
+      "owner": "repository_finish",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Boundary and rollback tests use real MySQL transactions; failed saves are not acknowledged."
+      ],
+      "deliverables": [
+        "attempt integration tests"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0030"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/test/java/com/onlineexam/SaveDeadlineRollbackIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T016"
+      ]
+    },
+    {
+      "id": "P06-01",
+      "phase": "P06",
+      "title": "Implement reusable Java grading service",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R09"
+      ],
+      "dependencies": [
+        "P05-02",
+        "P04-02"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Independent scoring fixtures match server-generated results."
+      ],
+      "deliverables": [
+        "AnswerEvaluator",
+        "McqEvaluator",
+        "GradingService"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0027"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/service/AnswerEvaluator.java",
+        "src/main/java/com/onlineexam/service/McqEvaluator.java",
+        "src/main/java/com/onlineexam/service/GradingService.java",
+        "src/test/java/com/onlineexam/service/GradingServiceTest.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T017"
+      ]
+    },
+    {
+      "id": "P06-02",
+      "phase": "P06",
+      "title": "Implement atomic idempotent submission",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R08",
+        "R09"
+      ],
+      "dependencies": [
+        "P06-01",
+        "P05-04"
+      ],
+      "owner": "repository_finish",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Submit records one immutable outcome; repeat calls and racing saves remain consistent."
+      ],
+      "deliverables": [
+        "finalization service and submit API"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0032"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/service/FinalizationService.java",
+        "src/main/java/com/onlineexam/dto/StudentResultView.java",
+        "src/main/java/com/onlineexam/controller/StudentSubmissionController.java",
+        "src/test/java/com/onlineexam/FinalizationIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T018",
+        "T019"
+      ]
+    },
+    {
+      "id": "P06-03",
+      "phase": "P06",
+      "title": "Implement scheduler and lazy/startup expiry recovery",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R08",
+        "R09"
+      ],
+      "dependencies": [
+        "P06-02"
+      ],
+      "owner": "repository_finish",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Closed browsers and restarts do not extend time; shared finalization handles expiry."
+      ],
+      "deliverables": [
+        "scheduled expiry and startup checks"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0033"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/config/ExpirySchedulingConfig.java",
+        "src/main/java/com/onlineexam/service/ExpiryRecovery.java",
+        "src/main/java/com/onlineexam/service/AttemptService.java",
+        "src/main/java/com/onlineexam/repository/AttemptRepository.java",
+        "src/test/java/com/onlineexam/ExpiryRecoveryIT.java",
+        "src/test/java/com/onlineexam/ClosedBrowserExpiryIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T020",
+        "T021",
+        "T016"
+      ]
+    },
+    {
+      "id": "P06-04",
+      "phase": "P06",
+      "title": "Implement scoped result and event APIs",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R10",
+        "R12"
+      ],
+      "dependencies": [
+        "P06-02",
+        "P03-03"
+      ],
+      "owner": "authentication",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Only authorized aggregate results/events are returned with no key or secret leakage."
+      ],
+      "deliverables": [
+        "student/instructor results and events"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0034"
+      ],
+      "blocker_ids": [
+        "B001"
+      ],
+      "changed_files": [
+        "pom.xml",
+        "src/main/java/com/onlineexam/controller/ResultQueryController.java",
+        "src/main/java/com/onlineexam/service/ResultQueryService.java",
+        "src/main/java/com/onlineexam/dto/InstructorResultView.java",
+        "src/main/java/com/onlineexam/dto/InstructorEventView.java",
+        "src/main/java/com/onlineexam/repository/SecurityEventRepository.java",
+        "src/test/java/com/onlineexam/ResultQueryIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T006",
+        "T012",
+        "T024",
+        "T025"
+      ]
+    },
+    {
+      "id": "P07-01",
+      "phase": "P07",
+      "title": "Build student dashboard and instructions",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R04",
+        "R05"
+      ],
+      "dependencies": [
+        "P04-04",
+        "P03-04"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Live catalog, eligibility, attempt state and exam rules are clear."
+      ],
+      "deliverables": [
+        "student dashboard/instructions"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0024"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/resources/static/student.html",
+        "src/main/resources/static/assets/student.js",
+        "src/main/resources/static/assets/app.css",
+        "src/main/resources/static/home.html",
+        "src/main/resources/static/assets/home.js",
+        "src/main/java/com/onlineexam/config/SecurityConfig.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T010"
+      ]
+    },
+    {
+      "id": "P07-02",
+      "phase": "P07",
+      "title": "Build exam player, navigation and save queue",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R06",
+        "R07"
+      ],
+      "dependencies": [
+        "P05-03",
+        "P07-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Save/clear, revision conflicts, navigation and refresh use server-confirmed state."
+      ],
+      "deliverables": [
+        "exam.html",
+        "exam JavaScript/CSS"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0031"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/resources/static/exam.html",
+        "src/main/resources/static/assets/exam.js",
+        "src/main/resources/static/assets/app.css",
+        "src/main/resources/static/assets/auth.js",
+        "src/main/java/com/onlineexam/config/SecurityConfig.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T013",
+        "T014",
+        "T015"
+      ]
+    },
+    {
+      "id": "P07-03",
+      "phase": "P07",
+      "title": "Connect submission/results and instructor review",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R08",
+        "R09",
+        "R10"
+      ],
+      "dependencies": [
+        "P07-02",
+        "P06-04",
+        "P06-03"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "User completes exam and views actual persisted score; instructor sees own results."
+      ],
+      "deliverables": [
+        "result/review screens"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0035"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/resources/static/assets/exam.js",
+        "src/main/resources/static/assets/student.js",
+        "src/main/resources/static/assets/instructor.js",
+        "src/main/resources/static/instructor.html",
+        "src/main/resources/static/assets/app.css"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T027"
+      ]
+    },
+    {
+      "id": "P07-04",
+      "phase": "P07",
+      "title": "Complete responsive, keyboard and failure feedback",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R06",
+        "R07",
+        "R13"
+      ],
+      "dependencies": [
+        "P07-03"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Keyboard/mobile flows and offline/pending errors are usable; no fake saved states."
+      ],
+      "deliverables": [
+        "shared styles and interaction states"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0036"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/resources/static/assets/exam.js"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T028",
+        "T029",
+        "T039"
+      ]
+    },
+    {
+      "id": "P08-01",
+      "phase": "P08",
+      "title": "Implement scoped supervised session recovery",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R07",
+        "R11",
+        "R12"
+      ],
+      "dependencies": [
+        "P06-04",
+        "P03-03",
+        "P07-03"
+      ],
+      "owner": "authentication",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Owner-only recovery invalidates old sessions, audits action and preserves attempt time/answers."
+      ],
+      "deliverables": [
+        "session-reset endpoint and instructor UI"
+      ],
+      "required_test_ids": [
+        "T006",
+        "T023",
+        "T025"
+      ],
+      "verification_ids": [
+        "V0037"
+      ],
+      "blocker_ids": [
+        "B002"
+      ],
+      "changed_files": [
+        "pom.xml",
+        "docs/ACCOUNTS.md",
+        "src/main/java/com/onlineexam/security/LoginRegistrationLock.java",
+        "src/main/java/com/onlineexam/security/LoginSerializingFilter.java",
+        "src/main/java/com/onlineexam/config/SecurityConfig.java",
+        "src/main/java/com/onlineexam/service/SessionRecoveryService.java",
+        "src/main/java/com/onlineexam/controller/SessionRecoveryController.java",
+        "src/main/java/com/onlineexam/dto/ActiveAttemptView.java",
+        "src/main/resources/static/instructor.html",
+        "src/main/resources/static/assets/instructor.js",
+        "src/test/java/com/onlineexam/SessionRecoveryIT.java",
+        "src/test/java/com/onlineexam/ClosedBrowserExpiryIT.java"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T006",
+        "T023",
+        "T025"
+      ]
+    },
+    {
+      "id": "P08-02",
+      "phase": "P08",
+      "title": "Harden safe text, validation and secret handling",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R01",
+        "R13"
+      ],
+      "dependencies": [
+        "P07-04",
+        "P08-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "SQL/script-like inputs stay data; responses and tracked evidence contain no secrets."
+      ],
+      "deliverables": [
+        "validation/rendering/configuration fixes"
+      ],
+      "required_test_ids": [
+        "T030",
+        "T035"
+      ],
+      "verification_ids": [
+        "V0038"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/security/LoginSerializingFilter.java",
+        "src/main/java/com/onlineexam/config/SecurityConfig.java",
+        "src/main/java/com/onlineexam/dto/AuthoringRequests.java",
+        "src/main/resources/static/instructor.html",
+        "src/test/java/com/onlineexam/ExamAuthoringIT.java",
+        "tools/check_safe_text_ui.py",
+        "tools/audit_secrets.py",
+        "docs/ACCOUNTS.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T030",
+        "T035"
+      ]
+    },
+    {
+      "id": "P08-03",
+      "phase": "P08",
+      "title": "Implement bounded authentication throttling",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R01",
+        "R13"
+      ],
+      "dependencies": [
+        "P03-03"
+      ],
+      "owner": "authentication",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Throttling behaves as documented and recovery does not bypass authentication."
+      ],
+      "deliverables": [
+        "login throttling configuration and docs"
+      ],
+      "required_test_ids": [
+        "T040"
+      ],
+      "verification_ids": [
+        "V0023"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/java/com/onlineexam/config/SecurityConfig.java",
+        "src/main/java/com/onlineexam/security/LoginSerializingFilter.java",
+        "src/main/java/com/onlineexam/security/LoginThrottle.java",
+        "src/test/java/com/onlineexam/controller/AuthenticationHttpTest.java",
+        "src/test/java/com/onlineexam/controller/ReadinessHttpTest.java",
+        "src/test/java/com/onlineexam/security/LoginThrottleTest.java",
+        "src/test/java/com/onlineexam/LoginThrottleIT.java",
+        "docs/ACCOUNTS.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T040"
+      ]
+    },
+    {
+      "id": "P08-04",
+      "phase": "P08",
+      "title": "Verify failure rollback and full recovery paths",
+      "core": true,
+      "priority": 1,
+      "requirement_ids": [
+        "R06",
+        "R07",
+        "R08",
+        "R09",
+        "R13"
+      ],
+      "dependencies": [
+        "P08-01",
+        "P08-02",
+        "P08-03",
+        "P06-03"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "DB failures, restart, timeout and session recovery preserve persisted state."
+      ],
+      "deliverables": [
+        "resilience verification evidence"
+      ],
+      "required_test_ids": [
+        "T021",
+        "T023",
+        "T026",
+        "T029"
+      ],
+      "verification_ids": [
+        "V0039"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/test/java/com/onlineexam/ExpiryRecoveryIT.java",
+        "src/test/java/com/onlineexam/SaveDeadlineRollbackIT.java",
+        "src/test/java/com/onlineexam/FinalizationIT.java",
+        "tools/check_resilience_browser.py",
+        "tools/check_restart_recovery.py",
+        "tools/check_restart_recovery.ps1",
+        "tools/audit_secrets.py"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T021",
+        "T023",
+        "T026",
+        "T029"
+      ]
+    },
+    {
+      "id": "P09-01",
+      "phase": "P09",
+      "title": "Run complete MySQL/security/concurrency regression",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R01",
+        "R03",
+        "R05",
+        "R06",
+        "R08",
+        "R09",
+        "R11",
+        "R13"
+      ],
+      "dependencies": [
+        "P08-04"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Required invariants pass on real services with no silent skips."
+      ],
+      "deliverables": [
+        "integration and security test reports"
+      ],
+      "required_test_ids": [
+        "T004",
+        "T005",
+        "T006",
+        "T009",
+        "T011",
+        "T012",
+        "T014",
+        "T016",
+        "T018",
+        "T019",
+        "T022",
+        "T024",
+        "T037"
+      ],
+      "verification_ids": [
+        "V0040"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/test/java/com/onlineexam/StudentPrivacyIT.java",
+        "e2e/package.json",
+        "e2e/package-lock.json",
+        "e2e/playwright.config.js",
+        "e2e/tests/smoke.spec.js",
+        "tools/check_test_selection.py"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T004",
+        "T005",
+        "T006",
+        "T009",
+        "T011",
+        "T012",
+        "T014",
+        "T016",
+        "T018",
+        "T019",
+        "T022",
+        "T024",
+        "T037"
+      ]
+    },
+    {
+      "id": "P09-02",
+      "phase": "P09",
+      "title": "Run full browser regression and fix defects",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R08",
+        "R09",
+        "R10",
+        "R13"
+      ],
+      "dependencies": [
+        "P09-01",
+        "P07-04"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Complete journeys, reconnect/refresh and actual controls pass in a real browser."
+      ],
+      "deliverables": [
+        "Playwright reports and screenshots"
+      ],
+      "required_test_ids": [
+        "T015",
+        "T027",
+        "T028",
+        "T029",
+        "T039"
+      ],
+      "verification_ids": [
+        "V0041"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "src/main/resources/static/assets/app.css",
+        "src/main/resources/static/assets/instructor.js",
+        "src/main/resources/static/instructor.html",
+        "e2e/tests/journey.spec.js",
+        "tools/check_test_selection.py",
+        "evidence/p09-02-ui-action-matrix.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T015",
+        "T027",
+        "T028",
+        "T029",
+        "T039"
+      ]
+    },
+    {
+      "id": "P09-03",
+      "phase": "P09",
+      "title": "Run demo-scale multi-student pilot",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R13"
+      ],
+      "dependencies": [
+        "P09-02"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "About ten accounts complete persistent workflows; reconcile acknowledgements and results."
+      ],
+      "deliverables": [
+        "pilot evidence and measured configuration"
+      ],
+      "required_test_ids": [
+        "T033"
+      ],
+      "verification_ids": [
+        "V0042"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "tools/check_ten_student_pilot.py",
+        "tools/run_ten_student_pilot.ps1",
+        "evidence/p09-03-pilot-conditions.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T033"
+      ]
+    },
+    {
+      "id": "P09-04",
+      "phase": "P09",
+      "title": "Review required test coverage and blocker closure",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R13"
+      ],
+      "dependencies": [
+        "P09-03"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "All application-behavior and security checks through P09 have executed evidence; defects are resolved. Clean setup, packaging and documentation gates remain explicitly assigned to P10-P11."
+      ],
+      "deliverables": [
+        "coverage review and updated trackers"
+      ],
+      "required_test_ids": [
+        "T037"
+      ],
+      "verification_ids": [
+        "V0043"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "evidence/p09-04-coverage-review.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T037"
+      ]
+    },
+    {
+      "id": "P10-01",
+      "phase": "P10",
+      "title": "Build runnable release artifact and startup instructions",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [
+        "P09-04"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Artifact starts using documented external configuration and database."
+      ],
+      "deliverables": [
+        "release build",
+        "README.md",
+        ".env.example"
+      ],
+      "required_test_ids": [
+        "T038"
+      ],
+      "verification_ids": [
+        "V0044"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "README.md",
+        ".env.example",
+        "e2e/package.json",
+        "tools/check_release_startup.ps1"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T038"
+      ]
+    },
+    {
+      "id": "P10-02",
+      "phase": "P10",
+      "title": "Rehearse clean setup and isolated backup/restore",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R09",
+        "R14"
+      ],
+      "dependencies": [
+        "P10-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "A fresh environment works; separate restored DB matches records without resetting user data."
+      ],
+      "deliverables": [
+        "clean-setup and recovery evidence"
+      ],
+      "required_test_ids": [
+        "T001",
+        "T032"
+      ],
+      "verification_ids": [
+        "V0045"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "tools/rehearse_clean_setup_backup.py",
+        "docs/BACKUP_RESTORE.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T001",
+        "T032"
+      ]
+    },
+    {
+      "id": "P10-03",
+      "phase": "P10",
+      "title": "Complete API, ER/class, OOP and user documentation",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [
+        "P10-01",
+        "P08-04"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Documentation explains implemented contracts, OOP and proctoring limits accurately."
+      ],
+      "deliverables": [
+        "docs/API.md",
+        "ARCHITECTURE.md",
+        "user/demo guides"
+      ],
+      "required_test_ids": [
+        "T034"
+      ],
+      "verification_ids": [
+        "V0046"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "docs/API.md",
+        "ARCHITECTURE.md",
+        "docs/USER_GUIDE.md",
+        "docs/DEMO_GUIDE.md",
+        "tools/check_documentation.py"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T034"
+      ]
+    },
+    {
+      "id": "P10-04",
+      "phase": "P10",
+      "title": "Prepare conditional hosting package and runbook",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [
+        "P10-02",
+        "P10-03"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Describe Java/MySQL/HTTPS/secrets/backups; mark actual public deployment NOT_REQUESTED."
+      ],
+      "deliverables": [
+        "deployment configuration and instructions"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0047"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "docs/DEPLOYMENT.md",
+        "deploy/runtime.env.example",
+        "evidence/p10-04-hosting-review.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": []
+    },
+    {
+      "id": "P11-01",
+      "phase": "P11",
+      "title": "Audit required scope and final release diff",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07",
+        "R08",
+        "R09",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14"
+      ],
+      "dependencies": [
+        "P10-04"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "No required feature is replaced by a stub; final code matches requirements and safe stack."
+      ],
+      "deliverables": [
+        "final review evidence"
+      ],
+      "required_test_ids": [
+        "T012",
+        "T035",
+        "T039"
+      ],
+      "verification_ids": [
+        "V0048"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "evidence/p11-01-scope-audit.md",
+        "tools/source_manifest.py",
+        "docs/REQUIREMENTS.md",
+        "docs/DATABASE.md",
+        "docs/ENVIRONMENT.md",
+        "docs/DECISIONS.md",
+        "docs/USER_GUIDE.md",
+        "START_HERE.md",
+        "tools/check_documentation.py"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T012",
+        "T035",
+        "T039"
+      ]
+    },
+    {
+      "id": "P11-02",
+      "phase": "P11",
+      "title": "Run final integrated gates on release candidate",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R13",
+        "R14"
+      ],
+      "dependencies": [
+        "P11-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Affected required checks pass on final source state with no stale evidence."
+      ],
+      "deliverables": [
+        "final Maven/MySQL/browser evidence"
+      ],
+      "required_test_ids": [
+        "T001",
+        "T002",
+        "T003",
+        "T004",
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T009",
+        "T010",
+        "T011",
+        "T012",
+        "T013",
+        "T014",
+        "T015",
+        "T016",
+        "T017",
+        "T018",
+        "T019",
+        "T020",
+        "T021",
+        "T022",
+        "T023",
+        "T024",
+        "T025",
+        "T026",
+        "T027",
+        "T028",
+        "T029",
+        "T030",
+        "T031",
+        "T032",
+        "T033",
+        "T034",
+        "T035",
+        "T036",
+        "T037",
+        "T038",
+        "T039",
+        "T040"
+      ],
+      "verification_ids": [
+        "V0049"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "evidence/p11-02-final-gates.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T001",
+        "T002",
+        "T003",
+        "T004",
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T009",
+        "T010",
+        "T011",
+        "T012",
+        "T013",
+        "T014",
+        "T015",
+        "T016",
+        "T017",
+        "T018",
+        "T019",
+        "T020",
+        "T021",
+        "T022",
+        "T023",
+        "T024",
+        "T025",
+        "T026",
+        "T027",
+        "T028",
+        "T029",
+        "T030",
+        "T031",
+        "T032",
+        "T033",
+        "T034",
+        "T035",
+        "T036",
+        "T037",
+        "T038",
+        "T039",
+        "T040"
+      ]
+    },
+    {
+      "id": "P11-03",
+      "phase": "P11",
+      "title": "Write final report and exact resume/run handover",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [
+        "P11-02"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Report real commands/results, actual run URL, limitations and deployment state."
+      ],
+      "deliverables": [
+        "docs/FINAL_REPORT.md",
+        "tracking/HANDOFF.md"
+      ],
+      "required_test_ids": [
+        "T034"
+      ],
+      "verification_ids": [
+        "V0050"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "docs/FINAL_REPORT.md",
+        "tracking/HANDOFF.md"
+      ],
+      "next_action": "Verified; continue to the next ready task",
+      "related_test_ids": [
+        "T034"
+      ]
+    },
+    {
+      "id": "P11-04",
+      "phase": "P11",
+      "title": "Close core release with evidence audit",
+      "core": true,
+      "priority": 2,
+      "requirement_ids": [
+        "R13",
+        "R14"
+      ],
+      "dependencies": [
+        "P11-03"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "All core tasks verified, required tests current, blocker list honest; tracker completion gate passes after this update."
+      ],
+      "deliverables": [
+        "final tracker validation and release summary"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [
+        "V0051",
+        "V0052"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "evidence/p11-04-completion-audit.md",
+        "docs/FINAL_REPORT.md",
+        "tracking/HANDOFF.md",
+        "tools/record_verification.mjs"
+      ],
+      "next_action": "Core release complete; public deployment requires a configured authorized target",
+      "related_test_ids": []
+    },
+    {
+      "id": "P12-01",
+      "phase": "P12",
+      "title": "Deploy only to requested/configured destination",
+      "core": false,
+      "priority": 2,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [
+        "P11-04"
+      ],
+      "owner": null,
+      "status": "TODO",
+      "acceptance_criteria": [
+        "When requested and authorized, provision compatible services and deploy without exposing secrets."
+      ],
+      "deliverables": [
+        "actual deployment configuration and URL"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [],
+      "blocker_ids": [],
+      "changed_files": [],
+      "next_action": "Deploy only to requested/configured destination",
+      "related_test_ids": []
+    },
+    {
+      "id": "P12-02",
+      "phase": "P12",
+      "title": "Verify hosted release and rollback readiness",
+      "core": false,
+      "priority": 2,
+      "requirement_ids": [
+        "R13",
+        "R14"
+      ],
+      "dependencies": [
+        "P12-01"
+      ],
+      "owner": null,
+      "status": "TODO",
+      "acceptance_criteria": [
+        "Real HTTPS URL passes auth/exam/result smoke checks; rollback and limitations documented."
+      ],
+      "deliverables": [
+        "hosted smoke and rollback evidence"
+      ],
+      "required_test_ids": [],
+      "verification_ids": [],
+      "blocker_ids": [],
+      "changed_files": [],
+      "next_action": "Verify hosted release and rollback readiness",
+      "related_test_ids": []
+    },
+    {
+      "id": "LOCAL-01",
+      "phase": "LOCAL",
+      "title": "Initialize and verify this workstation for local use",
+      "core": false,
+      "priority": 1,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [
+        "P11-04"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Start the pinned local MySQL service and preserve all existing configuration and persistent data.",
+        "Build with Java 21 and run unit, real-MySQL and isolated browser checks without skips.",
+        "Leave the demo application ready on loopback with documented reusable start and stop commands."
+      ],
+      "deliverables": [
+        "tools/start-local.ps1",
+        "tools/stop-local.ps1",
+        "README.md"
+      ],
+      "required_test_ids": [],
+      "related_test_ids": [
+        "T037",
+        "T038"
+      ],
+      "verification_ids": [
+        "V0053",
+        "V0054"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "tools/start-local.ps1",
+        "tools/stop-local.ps1",
+        "README.md",
+        "tracking/HANDOFF.md",
+        "tracking/WORKLOG.md"
+      ],
+      "next_action": "Verified; continue to the next ready task"
+    },
+    {
+      "id": "UI-01",
+      "phase": "UI",
+      "title": "Simplify pages into conventional examination dashboards",
+      "core": false,
+      "priority": 1,
+      "requirement_ids": [
+        "R06",
+        "R10",
+        "R14"
+      ],
+      "dependencies": [
+        "LOCAL-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Use restrained dashboard styling and practical exam lists, forms and navigation on all pages.",
+        "Preserve instructor creation/publication, student save/resume/submission, result access and security controls.",
+        "Verify desktop and mobile layouts, keyboard focus and the existing browser journey, then restart the local app."
+      ],
+      "deliverables": [
+        "src/main/resources/static/assets/app.css",
+        "src/main/resources/static/login.html",
+        "src/main/resources/static/home.html",
+        "src/main/resources/static/student.html",
+        "src/main/resources/static/instructor.html",
+        "src/main/resources/static/exam.html"
+      ],
+      "required_test_ids": [
+        "T027",
+        "T028",
+        "T029",
+        "T030",
+        "T039"
+      ],
+      "related_test_ids": [
+        "T027",
+        "T039"
+      ],
+      "verification_ids": [
+        "V0055",
+        "V0056"
+      ],
+      "blocker_ids": [
+        "B003"
+      ],
+      "changed_files": [
+        "src/main/resources/static/assets/app.css",
+        "src/main/resources/static/assets/home.js",
+        "src/main/resources/static/assets/student.js",
+        "src/main/resources/static/assets/instructor.js",
+        "src/main/resources/static/assets/exam.js",
+        "src/main/resources/static/login.html",
+        "src/main/resources/static/home.html",
+        "src/main/resources/static/student.html",
+        "src/main/resources/static/instructor.html",
+        "src/main/resources/static/exam.html",
+        "tools/check_dashboard_layouts.py",
+        "tools/check_keyboard_offline_ui.py",
+        "tools/run_dashboard_checks.py",
+        "docs/USER_GUIDE.md",
+        "docs/DEMO_GUIDE.md",
+        "docs/DECISIONS.md",
+        ".gitignore",
+        "tracking/HANDOFF.md",
+        "tracking/WORKLOG.md"
+      ],
+      "next_action": "Open http://127.0.0.1:8080/ and refresh with Ctrl+F5 to load the simplified dashboards."
+    },
+    {
+      "id": "TUNNEL-01",
+      "phase": "TUNNEL",
+      "title": "Start authorized ngrok tunnel for the running local app",
+      "core": false,
+      "priority": 1,
+      "requirement_ids": [
+        "R14"
+      ],
+      "dependencies": [
+        "LOCAL-01",
+        "UI-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Start ngrok to the existing app on loopback 8080 without changing persistent data.",
+        "Retrieve and verify the actual public HTTPS URL, readiness and dashboard resources.",
+        "Preserve authentication for private exam/result APIs and record authorization and tunnel lifecycle."
+      ],
+      "deliverables": [
+        "evidence/ngrok-public-smoke.json",
+        "docs/DEPLOYMENT.md",
+        "tracking/HANDOFF.md"
+      ],
+      "required_test_ids": [],
+      "related_test_ids": [],
+      "verification_ids": [
+        "V0057"
+      ],
+      "blocker_ids": [
+        "B004"
+      ],
+      "changed_files": [
+        "docs/DEPLOYMENT.md",
+        "tracking/HANDOFF.md",
+        "tracking/WORKLOG.md"
+      ],
+      "next_action": "Use the verified public URL while ngrok and the local app stay running; verify any replacement URL."
+    },
+    {
+      "id": "EXAM-UIUX-01",
+      "phase": "CONTENT",
+      "title": "Create and schedule the basic 30-question UI/UX test",
+      "core": false,
+      "priority": 1,
+      "requirement_ids": [
+        "R02",
+        "R03",
+        "R04",
+        "R06",
+        "R14"
+      ],
+      "dependencies": [
+        "LOCAL-01",
+        "UI-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Persist a beginner UI/UX concepts and principles examination with 30 distinct MCQs.",
+        "Each question has four distinct options, exactly one correct option and one mark.",
+        "Publish with a 10-minute limit and the exact 10 October 2026 01:30-01:40 Asia/Calcutta window.",
+        "Verify the persisted paper, UI timing/counts and student catalog without starting or consuming a student attempt."
+      ],
+      "deliverables": [
+        "MySQL examination record",
+        "evidence/uiux-test-summary.json",
+        "tracking/HANDOFF.md"
+      ],
+      "required_test_ids": [],
+      "related_test_ids": [],
+      "verification_ids": [
+        "V0058"
+      ],
+      "blocker_ids": [
+        "B005"
+      ],
+      "changed_files": [
+        "tracking/HANDOFF.md",
+        "tracking/WORKLOG.md"
+      ],
+      "next_action": "Students can start on 10 October 2026 at 01:30 IST; all attempts close at 01:40 IST. Published content is fixed."
+    },
+    {
+      "id": "STUDENTS-01",
+      "phase": "DATA",
+      "title": "Seed the supplied 15-student roster with roll-number credentials",
+      "core": false,
+      "priority": 1,
+      "requirement_ids": [
+        "R01",
+        "R11",
+        "R14"
+      ],
+      "dependencies": [
+        "LOCAL-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Create all 15 supplied display names as enabled STUDENT accounts in real MySQL.",
+        "Use each roll number as username and password, storing only application-compatible password hashes.",
+        "Import atomically, preserve existing accounts and allow idempotent repeat without resets.",
+        "Verify stored names/roles/password matches and actual local authentication without consuming student attempts or ending existing sessions."
+      ],
+      "deliverables": [
+        "tools/SeedStudentRoster.java",
+        "MySQL student accounts",
+        "evidence/student-roster-summary.json"
+      ],
+      "required_test_ids": [
+        "T034",
+        "T035"
+      ],
+      "related_test_ids": [
+        "T034",
+        "T035"
+      ],
+      "verification_ids": [
+        "V0059"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "tools/SeedStudentRoster.java",
+        "docs/ACCOUNTS.md",
+        "tracking/HANDOFF.md",
+        "tracking/WORKLOG.md",
+        "tools/audit_secrets.py"
+      ],
+      "next_action": "Students sign in with their respective roll number as both username and password."
+    },
+    {
+      "id": "EXAM-UIUX-02",
+      "phase": "DATA",
+      "title": "Extend UI/UX closing time to 02:00 IST while retaining a 10-minute duration",
+      "core": false,
+      "priority": 1,
+      "requirement_ids": [
+        "R04",
+        "R07",
+        "R08",
+        "R14"
+      ],
+      "dependencies": [
+        "EXAM-UIUX-01",
+        "STUDENTS-01"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Apply the explicitly requested schedule amendment to the existing UI/UX exam, keeping its opening time and 10-minute limit.",
+        "Close at 10 October 2026 02:00 Asia/Calcutta (9 October 20:30 UTC) and update displayed instructions.",
+        "Preserve all 30 questions/options/keys, saved answers, per-attempt deadlines and finalized results.",
+        "Verify actual MySQL and the student/instructor schedule and current availability; create no verification attempt."
+      ],
+      "deliverables": [
+        "Updated MySQL examination schedule",
+        "evidence/uiux-extension-summary.json",
+        "tracking/HANDOFF.md"
+      ],
+      "required_test_ids": [],
+      "related_test_ids": [],
+      "verification_ids": [
+        "V0060"
+      ],
+      "blocker_ids": [],
+      "changed_files": [
+        "tracking/HANDOFF.md",
+        "tracking/WORKLOG.md",
+        ".local/ExtendUiuxWindow.java"
+      ],
+      "next_action": "Refresh the catalog; the exam is available until 02:00 IST with a 10-minute limit and hard closing deadline. Existing finalized attempts retain their results."
+    },
+    {
+      "id": "CODE-01",
+      "phase": "REFACTOR",
+      "title": "Simplify application code and remove repeated database/UI work",
+      "core": false,
+      "priority": 1,
+      "requirement_ids": [
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07",
+        "R08",
+        "R09",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14"
+      ],
+      "dependencies": [
+        "UI-01",
+        "STUDENTS-01",
+        "EXAM-UIUX-02"
+      ],
+      "owner": "coordinator",
+      "status": "VERIFIED",
+      "acceptance_criteria": [
+        "Review runtime Java, frontend, configuration and supporting scripts; simplify duplication and use short clear private/local names.",
+        "Batch option/catalog reads without changing ordering, ownership, safe student payloads or stored results.",
+        "Keep fixed markup in HTML and make source formatting easy to read while preserving all UI interactions.",
+        "Run Java/real-MySQL/browser and relevant keyboard/offline/security checks on isolated schemas; preserve live student/exam data.",
+        "Package and restart the verified app, update current handoff and leave the public tunnel working."
+      ],
+      "deliverables": [
+        "Simplified Java/HTML/CSS/JavaScript source",
+        "evidence/refactor-*",
+        "docs/CODE_REVIEW.md"
+      ],
+      "required_test_ids": [
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T009",
+        "T010",
+        "T011",
+        "T012",
+        "T013",
+        "T014",
+        "T015",
+        "T016",
+        "T017",
+        "T018",
+        "T019",
+        "T020",
+        "T021",
+        "T024",
+        "T027",
+        "T028",
+        "T029",
+        "T030",
+        "T034",
+        "T035",
+        "T037",
+        "T038",
+        "T039"
+      ],
+      "related_test_ids": [],
+      "verification_ids": [
+        "V0061",
+        "V0062",
+        "V0063"
+      ],
+      "blocker_ids": [
+        "B006"
+      ],
+      "changed_files": [
+        "e2e/playwright.config.js",
+        "src/main/java/com/onlineexam/repository/QuestionOptionRepository.java",
+        "src/main/java/com/onlineexam/repository/QuestionRepository.java",
+        "src/main/java/com/onlineexam/service/AnswerService.java",
+        "src/main/java/com/onlineexam/service/AttemptService.java",
+        "src/main/java/com/onlineexam/service/ExamAuthoringService.java",
+        "src/main/java/com/onlineexam/service/ExamPublicationService.java",
+        "src/main/java/com/onlineexam/service/FinalizationService.java",
+        "src/main/java/com/onlineexam/service/GradingService.java",
+        "src/main/java/com/onlineexam/service/StudentExamCatalogService.java",
+        "src/main/resources/static/assets/app.css",
+        "src/main/resources/static/assets/exam.js",
+        "src/main/resources/static/assets/instructor.js",
+        "src/main/resources/static/assets/student.js",
+        "src/main/resources/static/exam.html",
+        "src/main/resources/static/home.html",
+        "src/main/resources/static/index.html",
+        "src/main/resources/static/instructor.html",
+        "src/main/resources/static/login.html",
+        "src/main/resources/static/student.html",
+        "src/test/java/com/onlineexam/RepositoryIT.java",
+        "tools/check_dashboard_layouts.py",
+        "tools/check_keyboard_offline_ui.py",
+        "tools/check_resilience_browser.py",
+        "tools/check_restart_recovery.ps1",
+        "tools/check_restart_recovery.py",
+        "tools/check_safe_text_ui.py",
+        "tools/rehearse_clean_setup_backup.py",
+        "tools/run_dashboard_checks.py",
+        "tools/browser_support.py",
+        "docs/CODE_REVIEW.md",
+        "README.md"
+      ],
+      "next_action": "Verified; inspect docs/CODE_REVIEW.md or continue normal use of the updated app."
+    }
+  ],
+  "local_runtime": {
+    "status": "READY",
+    "task_id": "LOCAL-01",
+    "url": "http://127.0.0.1:8080/",
+    "profile": "demo",
+    "app_pid": 33752,
+    "database": "online_exam",
+    "database_host": "127.0.0.1",
+    "database_port": 3307,
+    "verified_at": "2026-10-09T21:12:23.584388+00:00"
+  },
+  "public_tunnel": {
+    "status": "READY",
+    "task_id": "TUNNEL-01",
+    "provider": "ngrok",
+    "url": "https://graveness-undrafted-harsh.ngrok-free.dev",
+    "upstream": "http://127.0.0.1:8080",
+    "pid": 24044,
+    "traffic_inspection": false,
+    "authorized_by": "User explicitly approved private exam/user data exposure to ngrok after review warning.",
+    "verified_at": "2026-10-09T21:12:23.584388+00:00",
+    "lifecycle": "Temporary; local app and ngrok must remain running."
+  },
+  "scheduled_exams": [
+    {
+      "task_id": "EXAM-UIUX-01",
+      "exam_id": 3,
+      "title": "UI/UX Concepts and Principles - Basic Test",
+      "instructor": "demo_instructor1",
+      "status": "PUBLISHED",
+      "question_count": 30,
+      "options_per_question": 4,
+      "correct_options_per_question": 1,
+      "maximum_marks": 30,
+      "duration_minutes": 10,
+      "timezone": "Asia/Calcutta",
+      "opens_at": "2026-10-09T20:00:00Z",
+      "closes_at": "2026-10-09T20:30:00Z",
+      "verified_at": "2026-10-09T20:19:04.212031+00:00",
+      "original_closes_at": "2026-10-09T20:10:00Z",
+      "amendment_task_id": "EXAM-UIUX-02"
+    }
+  ],
+  "student_roster": {
+    "task_id": "STUDENTS-01",
+    "status": "SEEDED",
+    "student_count": 15,
+    "created_count": 15,
+    "role": "STUDENT",
+    "enabled": true,
+    "username_scheme": "Supplied roll number",
+    "password_scheme": "Respective roll number, stored as bcrypt hash",
+    "private_input": ".local/student-roster.tsv",
+    "local_api_logins_verified": 15,
+    "browser_login_verified": true,
+    "attempts_started_by_verification": 0,
+    "verified_at": "2026-10-09T20:10:16.684579+00:00"
+  }
+}

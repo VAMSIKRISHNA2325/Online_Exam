@@ -1,0 +1,16 @@
+{
+  "schema": "online_exam",
+  "tables": [
+    "users",
+    "exams",
+    "questions",
+    "question_options",
+    "attempts",
+    "answers",
+    "answer_revisions",
+    "security_events"
+  ],
+  "sha256": "712d54e4778696e3e56b3f67e1c351fccbc35516627cb499a09be9c38547181a",
+  "attempt_count": 3,
+  "active_attempt_count": 0
+}

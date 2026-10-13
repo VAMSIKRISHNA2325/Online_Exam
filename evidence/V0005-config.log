@@ -1,0 +1,4 @@
+﻿5:    url: ${DB_URL:jdbc:mysql://localhost:3306/online_exam?connectionTimeZone=UTC}
+6:    username: ${DB_USER:online_exam}
+7:    password: ${DB_PASSWORD:}
+21:        secure: ${COOKIE_SECURE:false}

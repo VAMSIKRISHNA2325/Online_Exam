@@ -1,0 +1,12 @@
+{
+  "css_tokens_unchanged": true,
+  "html_structure_attributes_meaningful_text_unchanged": [
+    "src/main/resources/static/exam.html",
+    "src/main/resources/static/home.html",
+    "src/main/resources/static/index.html",
+    "src/main/resources/static/instructor.html",
+    "src/main/resources/static/login.html",
+    "src/main/resources/static/student.html"
+  ],
+  "single_html5_doctype": true
+}

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta content="#f3f4f6" name="theme-color">
+    <title>Student dashboard | Examroom</title>
+    <link href="/assets/app.css" rel="stylesheet">
+    <script src="/assets/student.js" type="module"></script>
+  </head>
+  <body class="student-page">
+    <div class="app-frame">
+      <header class="app-header">
+        <a aria-label="Examroom dashboard" class="wordmark" href="/home.html"><span aria-hidden="true" class="wordmark-icon">E</span><span>Examroom</span></a>
+        <nav aria-label="Main navigation" class="header-nav"><a href="/home.html">Dashboard</a><a aria-current="page" href="/student.html">Examinations</a></nav>
+        <div class="header-right"><span class="header-label">Student</span><a class="outline-button" href="/home.html">My account</a></div>
+      </header>
+      <main aria-labelledby="student-title" class="student-main">
+        <section class="student-intro">
+          <h1 id="student-title">Student dashboard</h1>
+          <p>View available examinations, continue saved attempts, and check your results.</p>
+        </section>
+        <div class="notice error-notice" hidden id="student-error" role="alert"></div>
+        <p aria-live="polite" class="desk-status" hidden id="student-status" role="status"></p>
+        <section aria-labelledby="catalog-title" class="catalog-section">
+          <div class="catalog-heading">
+            <h2 id="catalog-title">Examinations <span class="count-mark" id="catalog-count">00</span></h2>
+            <button class="outline-button" id="refresh-catalog" type="button">Refresh list</button>
+          </div>
+          <div class="loading-state" id="catalog-loading" role="status">Loading examinations...</div>
+          <div class="catalog-table-wrap" hidden id="catalog-table">
+            <table class="catalog-table">
+              <caption class="sr-only">Published examinations and your attempt status</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Examination</th>
+                  <th scope="col">Details</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody id="catalog-list"></tbody>
+            </table>
+          </div>
+          <p class="catalog-empty" hidden id="catalog-empty">No examinations have been published yet. Check back with your instructor.</p>
+        </section>
+      </main>
+      <footer class="app-footer"><span>Online Examination System</span><span>Student dashboard</span></footer>
+    </div>
+    <dialog aria-labelledby="dialog-title" class="exam-dialog" id="exam-dialog">
+      <div class="dialog-top"><span>Exam instructions</span><button aria-label="Close exam instructions" id="close-dialog" type="button">×</button></div>
+      <h2 id="dialog-title"></h2>
+      <p class="dialog-description" id="dialog-description"></p>
+      <dl class="dialog-facts">
+        <div><dt>Time allowed</dt><dd id="dialog-duration"></dd></div>
+        <div><dt>Questions</dt><dd id="dialog-questions"></dd></div>
+        <div><dt>Maximum marks</dt><dd id="dialog-marks"></dd></div>
+        <div><dt>Closes</dt><dd id="dialog-closes"></dd></div>
+      </dl>
+      <div class="dialog-rules">
+        <h3>Exam rules</h3>
+        <ol>
+          <li>Your time limit is set by the server when you first start. Refreshing will not restart it.</li>
+          <li>Choose one answer for each question. You can change or clear answers before the deadline.</li>
+          <li>Submit when you are finished. The system also finalizes the attempt when time runs out.</li>
+        </ol>
+      </div>
+      <div class="notice error-notice" hidden id="dialog-error" role="alert"></div>
+      <div class="dialog-actions"><button class="outline-button" id="dialog-cancel" type="button">Cancel</button><button class="primary-button" id="dialog-start" type="button"><span>Start exam</span></button></div>
+    </dialog>
+  </body>
+</html>

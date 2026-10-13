@@ -1,0 +1,2 @@
+PASS: tools/start-local.ps1 parses
+PASS: tools/stop-local.ps1 parses

@@ -1,0 +1,6 @@
+Database contract structural check
+Tables in V1: users, exams, questions, question_options, attempts, answers, answer_revisions, security_events
+Missing ER entities: 0
+Missing cited repository methods: 0
+Migration link resolves: True
+Manual read-through: constraints, nullable links and repository return types match V1/source; service concurrency remains pending.

@@ -1,0 +1,1502 @@
+{
+  "schema_version": 1,
+  "runs": [
+    {
+      "id": "V0001",
+      "task_ids": [
+        "P00-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:00:15.577Z",
+      "command_or_procedure": "rg --files; git status --short; java -version; mvn -version; node -v; npm.cmd -v; docker info; mysql --version; Get-Service MySQL*; Get-NetTCPConnection -LocalPort 3306,8080; portable java -version; portable mvn.cmd -version; node tools/validate_trackers.mjs",
+      "source_snapshot": "sha256-manifest:0689a58ac9e6945cb02e9699ac938b68820decd58189d8b85b81bb2421d7f51c",
+      "environment": "Windows 11 PowerShell 5.1; Node 24.13.1; portable Temurin 21.0.12.1+1; portable Maven 3.9.16; Docker CLI 29.7.2 without reachable engine; Edge 154; no MySQL service",
+      "expected_result": "Existing repository contents and actual tool/service capabilities documented without claiming application tests passed",
+      "actual_result": "Specification-only workspace documented; JDK and Maven installed portably and version verified; Docker engine and MySQL unavailable; tracker structure valid",
+      "outcome": "PASS",
+      "exit_code": null,
+      "evidence_paths": [
+        "evidence/V0001.log"
+      ]
+    },
+    {
+      "id": "V0002",
+      "task_ids": [
+        "P00-02"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:01:05.629Z",
+      "command_or_procedure": "Read CODEX_IMPLEMENTATION_PLAN.md, AGENTS.md, tracking/tasks.json and docs/REQUIREMENTS.md; run node -e R01-R14 mapping check",
+      "source_snapshot": "sha256-manifest:21ea039dc2a201148dfe3f659e1360e3472412d9b6af0041f4279588c2d1662d",
+      "environment": "Windows 11; Node 24.13.1; specification-only workspace",
+      "expected_result": "All R01-R14 and fixed API/security/data boundaries mapped with no unrecorded contradictions",
+      "actual_result": "R01-R14 mapping check passed; manual cross-read found no contradictory core requirement",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0002.log"
+      ]
+    },
+    {
+      "id": "V0003",
+      "task_ids": [
+        "P00-03"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:02:36.559Z",
+      "command_or_procedure": "Portable java -version; portable mvn.cmd -version; SHA-512 compare with official Maven checksum; node version-pin presence check; official Boot/Maven/MySQL/Playwright release and compatibility review",
+      "source_snapshot": "sha256-manifest:9480bf281c75c12766636bc6779e1484f81f9b8a604695b1aea0f2ea4cc333e8",
+      "environment": "Windows 11; Temurin 21.0.12.1+1; Maven 3.9.16; Node 24.13.1; no MySQL service",
+      "expected_result": "Exact published tool/dependency versions documented, with local Java/Maven and checksum verification",
+      "actual_result": "Portable Java/Maven version commands passed; Maven SHA-512 matched; all six exact version pins recorded; Boot-managed dependency compatibility documented",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0003.log"
+      ]
+    },
+    {
+      "id": "V0004",
+      "task_ids": [
+        "P00-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:02:53.570Z",
+      "command_or_procedure": "node tools/validate_trackers.mjs; inspect tracking/tests.json statuses and tracking/blockers.json",
+      "source_snapshot": "sha256-manifest:62a227cac934a12cad0e6acb52b0ec57b5c6b27fe9eade2298cde196727242b0",
+      "environment": "Windows 11; Node 24.13.1; initialized tracker pack with execution records V0001-V0003",
+      "expected_result": "Tracker references and state valid; future acceptance checks still NOT_RUN; no invented blockers",
+      "actual_result": "Validator structureValid=true with 3/48 core verified, 0/40 tests PASS and zero observed blockers; all application checks remain NOT_RUN",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0004.log"
+      ]
+    },
+    {
+      "id": "V0005",
+      "task_ids": [
+        "P01-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:06:59.833Z",
+      "command_or_procedure": "Set JAVA_HOME to portable Temurin 21; .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -DskipTests package; rg -n DB_URL|DB_USER|DB_PASSWORD|COOKIE_SECURE src/main/resources/application.yml",
+      "source_snapshot": "sha256-manifest:0936e2f7a9cc507675a5ef5ec94e040de006380344759d318e9e1c75221c1d6e",
+      "environment": "Windows 11; Temurin 21.0.12.1+1; Maven Wrapper 3.3.4 downloading Maven 3.9.16; Spring Boot 3.5.16; no MySQL service",
+      "expected_result": "Pinned Spring application compiles and packages; database credentials remain external; no skipped tests counted as passed",
+      "actual_result": "BUILD SUCCESS; 2 Java sources compiled and executable jar created; config reads DB URL/user/password from environment. Tests were intentionally skipped and remain NOT_RUN.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0005-build.log",
+        "evidence/V0005-config.log"
+      ]
+    },
+    {
+      "id": "V0006",
+      "task_ids": [
+        "P01-02"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:11:40.946Z",
+      "command_or_procedure": "docker compose config --quiet; docker compose up -d db; docker inspect health; read-only SQL inside container; Java 21 source launcher with managed MySQL Connector/J running tools/DbProbe.java against jdbc:mysql://127.0.0.1:3307/online_exam",
+      "source_snapshot": "sha256-manifest:b058473de9b410027dabb0bb7a3b8451b14a84b4f1aa3985ff89c5d5b046259d",
+      "environment": "Windows 11; Docker engine 29.7.2; MySQL container mysql:8.4.11 on 127.0.0.1:3307; Temurin 21.0.12.1+1; local ignored random credentials; schemas online_exam, online_exam_it, online_exam_e2e",
+      "expected_result": "Healthy isolated MySQL service and successful host-side JDBC connection to distinct development/test schemas",
+      "actual_result": "Container healthy; JDBC returned MySQL 8.4.11, InnoDB, UTC +00:00 and found all three schema names; no application migrations yet",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0006-compose.log",
+        "evidence/V0006-connect.log"
+      ]
+    },
+    {
+      "id": "V0007",
+      "task_ids": [
+        "P01-03"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:17:24.228Z",
+      "command_or_procedure": "Set JAVA_HOME; .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -DskipTests package (sandbox escalation); launch jar with DB_URL/DB_USER/DB_PASSWORD; curl -i /api/ready; docker compose stop db; curl -i /api/ready; docker compose start db; curl -i /api/ready; scan application log for local password/generated password",
+      "source_snapshot": "sha256-manifest:77c6c468c38f15a4bbda0658b7b35f4322788e9fcbf6dbb481489f9a4217f95e",
+      "environment": "Windows 11; Java 21.0.12.1; Spring Boot 3.5.16; MySQL 8.4.11 on 127.0.0.1:3307; application localhost:8080",
+      "expected_result": "Readiness is 200 with DB, 503 with safe stable error without DB, and 200 after recovery; no secrets in startup log",
+      "actual_result": "Build succeeded; HTTP sequence 200 UP, 503 DATABASE_UNAVAILABLE, 200 UP; no database or generated security password in log. Initial restricted build was denied network, then passed with permitted sandbox escalation. Flyway emitted an untested-MySQL-8.4 warning to examine in migration work.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0007-build.log",
+        "evidence/V0007-app.log",
+        "evidence/V0007-db-down.http",
+        "evidence/V0007-db-restored.http",
+        "evidence/P01-03-restricted-network.log"
+      ]
+    },
+    {
+      "id": "V0008",
+      "task_ids": [
+        "P00-03"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:18:58.763Z",
+      "command_or_procedure": "Review running application log for managed Flyway/MySQL warning; compare with current Redgate MySQL support matrix; run node version-pin and caveat presence check",
+      "source_snapshot": "sha256-manifest:f4d33756e8c76a4ee0bbec35d36e0959af73e51c688d963c8eee05bc39f6246e",
+      "environment": "Windows 11; Spring Boot 3.5.16; Flyway 11.7.2; MySQL 8.4.11; no migrations yet",
+      "expected_result": "Pinned versions documented without a false claim of certified MySQL 8.4 migration support",
+      "actual_result": "Version pins and vendor-support caveat documented; empty-schema app startup passed, but real migration compatibility remains assigned to P02-01 and P09",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0008.log"
+      ]
+    },
+    {
+      "id": "V0009",
+      "task_ids": [
+        "P01-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:23:59.107Z",
+      "command_or_procedure": "Set JAVA_HOME to Temurin 21; .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 test; load MYSQL_PASSWORD privately from ignored .env; .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify",
+      "source_snapshot": "sha256-manifest:4fd31bfcd5bf4334f023c5def5a2fca867e0f5db4976c88476d674715d3aae29",
+      "environment": "Windows 11; Java 21.0.12.1; Maven Wrapper 3.3.4/Maven 3.9.16; Spring Boot 3.5.16; MySQL 8.4.11, disposable schema online_exam_it on 127.0.0.1:3307",
+      "expected_result": "Meaningful Java/HTTP tests and a real-MySQL integration test execute, with no zero-test or skipped success",
+      "actual_result": "mvnw test: 5 tests, 0 failures/errors/skips. mysql-it verify: 5 unit/HTTP tests plus 1 Failsafe IT, 0 failures/errors/skips. IT verifies MySQL identity, online_exam_it, and HTTP readiness; no migration exists yet.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0009-unit.log",
+        "evidence/V0010-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0010",
+      "task_ids": [
+        "P02-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:28:29.613Z",
+      "command_or_procedure": "With MYSQL_PASSWORD loaded from ignored .env and guarded online_exam_it URL, run .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify on empty schema; add SchemaIT; rerun same command to validate applied migration and exercise real MySQL constraints",
+      "source_snapshot": "sha256-manifest:d3f4f70824ae31a204ba3e9ed628384cd4f1747bcd018aa5efe055184119a5d7",
+      "environment": "Windows 11; Java 21.0.12.1; Maven 3.9.16; Spring Boot 3.5.16/Flyway 11.7.2; MySQL 8.4.11 InnoDB, disposable online_exam_it on 127.0.0.1:3307",
+      "expected_result": "Fresh V1 migration creates required tables, foreign keys, unique indexes and checks; invalid records fail; second startup preserves migration history",
+      "actual_result": "Flyway applied V1 from empty schema, then validated V1 on repeat with no reapplication. SchemaIT passed 2 checks: metadata/history plus duplicate attempt, incorrect relationship, invalid marks, single-correct guard, revision uniqueness and rollback. Final profile ran 5 unit/HTTP plus 3 real-MySQL IT tests with zero failures/errors/skips. Flyway's MySQL 8.4 vendor-support warning remains documented.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/P02-01-migration-attempt1.log",
+        "evidence/P02-01-schema-tests-attempt1.log"
+      ]
+    },
+    {
+      "id": "V0011",
+      "task_ids": [
+        "P02-02"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:40:58.643Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify; inspect Surefire/Failsafe counts and RepositoryIT CRUD, lock, revision, rollback checks",
+      "source_snapshot": "sha256-manifest:2111cfab70f82119f088ffd678c99604e32b9e97fccdc9bd5d2f40b3223181cc",
+      "environment": "Windows PowerShell; Temurin Java 21.0.12.1; Maven Wrapper 3.3.4; MySQL 8.4.11 on 127.0.0.1:3307 online_exam_it; MYSQL_PASSWORD supplied privately",
+      "expected_result": "Build succeeds; all Java unit and real MySQL integration tests execute without skips, including repository CRUD and rollback",
+      "actual_result": "BUILD SUCCESS; Surefire 5 and Failsafe 6 tests, 0 failures/errors/skips. RepositoryIT exercised CRUD, FOR UPDATE, answer revisions, terminal guard, cascades and transaction rollback on online_exam_it.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0011-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0012",
+      "task_ids": [
+        "P02-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T22:45:31.825Z",
+      "command_or_procedure": "Structural PowerShell check of V1 CREATE TABLE names against ER entities, cited repository methods against source, migration link, plus manual read-through of constraints/nullability/return types",
+      "source_snapshot": "sha256-manifest:6f2c1d4786cf4f2fff8200b5146dc9eea784ce7b7325ba3ad0bec9562773c6b8",
+      "environment": "Windows PowerShell; source tree after P02-02 V0011; no database mutation",
+      "expected_result": "All eight migrated tables appear in ER diagram, repository calls and link resolve, and document matches migration/source without claiming unverified service concurrency",
+      "actual_result": "8/8 ER entities found; 0 missing repository methods; migration link exists; read-through found documented limitations and matched constraints/return types",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0012-database-contract.txt"
+      ]
+    },
+    {
+      "id": "V0013",
+      "task_ids": [
+        "P02-03"
+      ],
+      "test_ids": [
+        "T002",
+        "T036"
+      ],
+      "timestamp": "2026-09-28T22:51:21.143Z",
+      "command_or_procedure": "Maven -Pmysql-it verify; packaged Java normal/demo/provision profile starts against isolated MySQL schemas; read-only account/hash counts; duplicate and invalid-role provision retries",
+      "source_snapshot": "sha256-manifest:57685cdd6d87404357d21aa9c86597022a8a2cdffbb515630f5e724347546831",
+      "environment": "Windows PowerShell, Java 21.0.12.1, Spring Boot 3.5.16, MySQL 8.4.11 online_exam and online_exam_e2e, private generated passwords in ignored .local",
+      "expected_result": "No demo accounts under normal profile; explicit demo creates two instructors/three students with encoded passwords; local provisioning persists one account and rejects duplicate username/invalid role",
+      "actual_result": "5 unit/HTTP and 8 MySQL IT passed with zero skips; normal isolated schema had 0 demo accounts; explicit demo schema had 5 (2 instructors/3 students), all bcrypt-tagged; local student persisted; duplicate/ADMIN commands exited 1 and did not alter account rows",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0013-mysql-it.log",
+        "evidence/V0013-profile-check.txt",
+        "evidence/V0013-default-isolated-count.txt",
+        "evidence/V0013-demo-count.txt",
+        "evidence/V0013-provision-rejections.txt"
+      ]
+    },
+    {
+      "id": "V0014",
+      "task_ids": [
+        "P03-01"
+      ],
+      "test_ids": [
+        "T003",
+        "T004"
+      ],
+      "timestamp": "2026-09-28T23:03:52.964Z",
+      "command_or_procedure": "Maven -Pmysql-it verify; packaged Java app on localhost; tools/smoke_auth.ps1 with private demo password; inspect HTTP statuses, session rotation, safe identity and logout invalidation",
+      "source_snapshot": "sha256-manifest:1770b109429b267860af5d927a09390cc2c4daf0b82dc4701216875b664597dd",
+      "environment": "Windows PowerShell, Java 21.0.12.1, Spring Boot 3.5.16, MySQL 8.4.11 local online_exam/online_exam_it",
+      "expected_result": "Valid MySQL account authenticates; wrong password, missing/invalid CSRF and logged-out session fail; successful login rotates session ID and exposes no hash; DB error response/log is sanitized",
+      "actual_result": "10 unit/HTTP and 9 real-MySQL IT passed without skips; live packaged app returned login 204, bad password 401, missing CSRF 403, logout 204, old session 401, rotated session ID, safe /api/me; DB-failure test found no private JDBC message in response or captured log",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0014-mysql-it.log",
+        "evidence/V0014-live-auth.json",
+        "evidence/V0014-live-app.log"
+      ]
+    },
+    {
+      "id": "V0015",
+      "task_ids": [
+        "P03-02"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T23:11:38.419Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify; inspect AccessControlIT real-MySQL ownership/lock checks and QuestionViewsTest JSON serialization",
+      "source_snapshot": "sha256-manifest:8938325c72d308340e4c4cbeca9d87193b5c7ad6deb047e2a034fb9551527d6d",
+      "environment": "Windows PowerShell, Java 21.0.12.1, Spring Boot 3.5.16, MySQL 8.4.11 online_exam_it",
+      "expected_result": "Authenticated identity determines instructor/student role; foreign exam/attempt IDs are hidden; student question serialization has no correct-answer flag; no skipped tests",
+      "actual_result": "AccessControlIT 2 and QuestionViewsTest 1 passed; full gate ran 11 unit/HTTP plus 14 real MySQL IT, zero failures/errors/skips. Anonymous access returned 401, wrong roles 403, foreign/missing resources 404 in service checks. Full T005 instructor-mutation route sweep remains pending until those routes exist.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0015-p03-02-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0016",
+      "task_ids": [
+        "P03-03"
+      ],
+      "test_ids": [
+        "T022"
+      ],
+      "timestamp": "2026-09-28T23:15:39.380Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify; inspect real embedded Tomcat HTTP sequential and barrier-synchronized concurrent login cases, audit rows, logout and short test-session expiry",
+      "source_snapshot": "sha256-manifest:a6fc610844a12dfe11cecd0fef96c6454f5b4b07350e70dd15ef2304342a5285",
+      "environment": "Windows PowerShell, Java 21.0.12.1, Spring Security 6.5.11, MySQL 8.4.11 online_exam_it, single application instance",
+      "expected_result": "Only one student HTTP session wins and first remains valid; instructor may have two; rejected logins have sanitized MySQL event; logout/idle expiry clear registry and permit re-login; zero skipped tests",
+      "actual_result": "11 unit/HTTP plus 15 real MySQL IT passed with zero failures/errors/skips. StudentSessionIT used separate real HTTP clients and start barrier: 204/409, first 200, loser 401, one sanitized DUPLICATE_LOGIN event. Instructors 204/204. Test-only 1-second Tomcat inactivity expired old session; old cookie 401, registry empty, new login 204. Production timeout remains 15 minutes.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0016-p03-03-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0017",
+      "task_ids": [
+        "P04-01"
+      ],
+      "test_ids": [
+        "T007"
+      ],
+      "timestamp": "2026-09-28T23:20:29.530Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify, with the local MySQL credential supplied privately",
+      "source_snapshot": "sha256-manifest:d83b3e4b58961415bd36fb03033c996c5de3735f1c038dc5253a27b0d932e02f",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 at 127.0.0.1:3307, online_exam_it; Windows PowerShell",
+      "expected_result": "Owned draft exam and question CRUD persists, validates malformed input and authorization, and rolls back failed replacements; all unit and real-MySQL integration tests pass without skips.",
+      "actual_result": "Maven BUILD SUCCESS; 11 unit/HTTP tests and 20 real-MySQL integration tests passed with zero failures, errors or skips. ExamAuthoringIT ran five cases for owned CRUD, access denial, published immutability, validation and transaction rollback.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0017-p04-01-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0018",
+      "task_ids": [
+        "P03-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T23:26:12.071Z",
+      "command_or_procedure": "Package with .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -DskipTests package; run the packaged Java app against local MySQL; python .local/check_login_ui.py using headless Chromium",
+      "source_snapshot": "sha256-manifest:d4f91cb03eb5416b233be15257e10ea362e33b2063b6bee4e294a992933c9e04",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11; Python Playwright Chromium 149; Windows; desktop 1440x900 and mobile 390x844",
+      "expected_result": "Browser login/logout and current-user pages use real server sessions, handle errors clearly, remain usable at mobile width, and produce no page errors.",
+      "actual_result": "Packaged build succeeded. Live browser check passed incorrect credentials, show/hide password, valid login, current-user display, refresh persistence, duplicate student login denial with original session preserved, logout, mobile re-login, no page errors or horizontal overflow. Desktop/mobile screenshots inspected.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p03-04-package.log",
+        "evidence/V0018-p03-04-browser.log",
+        "evidence/p03-04-login-desktop.png",
+        "evidence/p03-04-login-mobile.png",
+        "evidence/p03-04-account-desktop.png"
+      ]
+    },
+    {
+      "id": "V0019",
+      "task_ids": [
+        "P04-02"
+      ],
+      "test_ids": [
+        "T008",
+        "T009"
+      ],
+      "timestamp": "2026-09-28T23:27:36.951Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify with the private local MySQL credential; inspect ExamPublicationIT and ExamAuthoringIT outcomes",
+      "source_snapshot": "sha256-manifest:0e724d86962ce829240f2450b889e0abab1749b6999438d4103cde26e47d4400",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_it; Windows PowerShell",
+      "expected_result": "Invalid drafts remain draft, valid paper publishes atomically, edit/publication lock race preserves complete paper, and all published mutations are rejected.",
+      "actual_result": "Maven BUILD SUCCESS; 11 unit/HTTP and 24 real-MySQL integration tests passed without failures, errors or skips. ExamPublicationIT (4) covered invalid papers/windows, access, repeat publish and an independent-thread edit/publication race. ExamAuthoringIT (5) also checked every published authoring mutation is rejected.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0019-p04-02-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0020",
+      "task_ids": [
+        "P04-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T23:32:56.978Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify with the private local MySQL credential; inspect StudentExamCatalogIT",
+      "source_snapshot": "sha256-manifest:d1bd4a028eb491041a1e1c101f838185dd80d3958da87f2792434daa5e77e0be",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_it; Windows PowerShell",
+      "expected_result": "Student-only catalog shows published metadata without answer keys; availability policy handles exact open/close boundaries and excludes drafts.",
+      "actual_result": "Maven BUILD SUCCESS; 11 unit/HTTP and 27 real-MySQL integration tests passed without failures, errors or skips. StudentExamCatalogIT (3) verified two instructors' published listings, draft/key exclusion, role checks, and exact opening/closing policy edges. T010 remains NOT_RUN until attempt-start endpoint exercises the policy; T012 remains NOT_RUN until complete attempt/result payload sweep.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0020-p04-04-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0021",
+      "task_ids": [
+        "P04-03"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T23:36:00.678Z",
+      "command_or_procedure": "node --check on auth.js and instructor.js; run the verified packaged app against isolated online_exam_e2e with explicit demo profile; python .local/check_instructor_ui.py in headless Chromium",
+      "source_snapshot": "sha256-manifest:2c6ba5d4f9517b86440ba83a0474b49009b089dae8d09d80f70455bfab9bfd6a",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_e2e; Chromium 149; desktop 1440x900 and mobile 390x844",
+      "expected_result": "Instructor dashboard/editor calls real owner APIs for exam and question create/edit/delete, reports validation errors, publishes valid papers, and remains usable on mobile.",
+      "actual_result": "JavaScript syntax checks passed. Live browser flow passed instructor sign-in/navigation, exam create/edit/delete, invalid publication error, question create/edit/delete, valid publication/freeze, reload persistence, and mobile layout. No page errors or horizontal overflow; desktop/mobile screenshots inspected.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0021-p04-03-browser.log",
+        "evidence/p04-03-instructor-start.png",
+        "evidence/p04-03-instructor-draft.png",
+        "evidence/p04-03-instructor-published.png",
+        "evidence/p04-03-instructor-mobile.png"
+      ]
+    },
+    {
+      "id": "V0022",
+      "task_ids": [
+        "P05-01"
+      ],
+      "test_ids": [
+        "T010",
+        "T011"
+      ],
+      "timestamp": "2026-09-28T23:44:18.806Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify with private local MySQL credential; inspect AttemptStartIT and StudentExamCatalogIT in the integrated run",
+      "source_snapshot": "sha256-manifest:7e01c3e5a8d6f839d2d5fb74009343b4e861d2debcd78f46a5f026a984e823e8",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_it; Windows PowerShell",
+      "expected_result": "Published catalog omits drafts/keys; only an open window permits a new attempt; repeated and concurrent starts return one MySQL row and unchanged server deadline.",
+      "actual_result": "Integrated Maven BUILD SUCCESS after the in-progress throttle test-slice bean wiring was completed: 12 unit/HTTP and 33 real-MySQL integration tests, zero failures/errors/skips. AttemptStartIT (4) verified before/open/closing boundaries, original deadline, repeat after close and two distinct-connection concurrent starts; StudentExamCatalogIT (3) verified published-only safe catalog. Earlier partial gate failed during simultaneous security edits and is retained at evidence/V0022-p05-01-mysql-it.log, not counted as a pass.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0022-p08-03-mysql-it.log",
+        "evidence/V0022-p05-01-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0023",
+      "task_ids": [
+        "P08-03"
+      ],
+      "test_ids": [
+        "T040"
+      ],
+      "timestamp": "2026-09-28T23:44:59.513Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify with private local MySQL credential; inspect LoginThrottleTest and live Tomcat/MySQL LoginThrottleIT",
+      "source_snapshot": "sha256-manifest:9d3d23a9a0def5cf26445a47ba984ac2850986fca50a3a84d8d5ee512e6a2c80",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_it; real Tomcat HTTP; Windows PowerShell",
+      "expected_result": "Five failed passwords trigger bounded cooldown and 429 Retry-After; correct password still requires authentication after cooldown; duplicate-session conflicts do not count as failed credentials.",
+      "actual_result": "Maven BUILD SUCCESS; 12 unit/HTTP and 33 real-MySQL integration tests passed with zero failures, errors or skips. Live LoginThrottleIT covered 5 bad passwords, 429 for bad and correct credentials during cooldown, account isolation, recovery after test-only 2-second cooldown, and repeated 409 conflicts while first student session remained active. Production defaults and single-instance limit documented.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0022-p08-03-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0024",
+      "task_ids": [
+        "P07-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T23:48:35.633Z",
+      "command_or_procedure": "node --check src/main/resources/static/assets/student.js; package the app with .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -DskipTests package; run against isolated online_exam_e2e with explicit demo accounts; python .local/check_student_ui.py in headless Chromium",
+      "source_snapshot": "sha256-manifest:f02b55fe6366ec204324331004a9206f26e3685f3f3dc460fc59976c260ede4b",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_e2e; Chromium 149; desktop 1440x900 and mobile 390x844",
+      "expected_result": "Student-only dashboard shows live published catalog, availability, own attempt state, clear instructions and responsive controls without exposing answer keys.",
+      "actual_result": "JavaScript syntax and package checks passed. Live browser created a published open paper through instructor APIs, then student dashboard showed safe catalog metadata, instructions and available start. A real attempt was created through the API; dashboard refresh showed IN PROGRESS and Resume exam, with only that student's summary. Desktop/mobile screenshots were inspected; no page errors or horizontal overflow. Exam player navigation is P07-02 and remains pending.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p07-01-package.log",
+        "evidence/V0024-p07-01-browser.log",
+        "evidence/p07-01-student-desktop.png",
+        "evidence/p07-01-student-instructions.png",
+        "evidence/p07-01-student-mobile.png"
+      ]
+    },
+    {
+      "id": "V0025",
+      "task_ids": [
+        "P03-03"
+      ],
+      "test_ids": [
+        "T031"
+      ],
+      "timestamp": "2026-09-28T23:49:39.871Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Dit.test=SessionAndCsrfLifecycleIT,StudentSessionExpiryIT -Pmysql-it verify with private MySQL credential; separately run python .local/check_csrf_lifecycle.py against packaged demo app",
+      "source_snapshot": "sha256-manifest:7a3a168df22ec102f7f942525254a46c21bf1079f901494201f2d2cb309db52a",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; real Tomcat HTTP; MySQL 8.4.11 online_exam_it and isolated demo app; Windows PowerShell",
+      "expected_result": "Login rotates session ID and CSRF token; stale tokens cannot log out or re-login; fresh tokens work; idle session expiry clears registry and permits authenticated re-login.",
+      "actual_result": "Focused Maven gate passed 12 unit/HTTP and 2 real-MySQL integration tests without failures/errors/skips. New lifecycle IT confirmed pre/post session/token changes, stale-token rejection with first auth preserved, fresh logout and re-login. Existing expiry IT confirmed inactive registry cleanup and lost-cookie re-login. Packaged live HTTP script independently passed the CSRF/session lifecycle.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/t031-session-csrf-mysql-it.log",
+        "evidence/p03-csrf-live.log"
+      ]
+    },
+    {
+      "id": "V0026",
+      "task_ids": [
+        "P05-02"
+      ],
+      "test_ids": [
+        "T013",
+        "T014"
+      ],
+      "timestamp": "2026-09-28T23:51:07.603Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify with private local MySQL credential; inspect AnswerSaveIT and adjacent attempt/session integration tests",
+      "source_snapshot": "sha256-manifest:1351cb4cc606604f0f5d4f90f71028d0e18b67d56f1fdfb2cb7fd5fefd94ead5",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_it; Windows PowerShell",
+      "expected_result": "Authorized valid answer saves/clears commit under attempt-row lock; relationship/owner/deadline checks reject invalid writes; stale revisions and concurrent reordered writes cannot overwrite newer answers.",
+      "actual_result": "Maven BUILD SUCCESS; 12 unit/HTTP and 38 real-MySQL integration tests passed without failures, errors or skips. AnswerSaveIT (4) covered save/clear/retry/reload, stale and foreign/malformed requests, exact deadline/finalized state, and a two-connection blocked competing save that returned current revision. Save/clear appends revision within the same transaction.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0026-p05-02-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0027",
+      "task_ids": [
+        "P06-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T23:54:11.957Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Dit.test=InstructorRoleEnforcementIT -Pmysql-it verify with private MySQL credential; inspect the unfiltered Surefire GradingServiceTest result",
+      "source_snapshot": "sha256-manifest:e96bda25baa75b7aed41b4ab4cd84ae13388b758f849896e51a07662dd6311ca",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; Windows PowerShell; Maven Surefire unit gate",
+      "expected_result": "Pure Java scorer uses server-held MCQ answer keys and independent hand-calculated all-correct, mixed, wrong, unanswered and cleared fixtures; malformed relationships fail.",
+      "actual_result": "GradingServiceTest ran two independent fixture/validation cases with no failures or skips as part of a BUILD SUCCESS gate of 14 unit/HTTP and 1 focused real-MySQL integration test. Fixtures checked scores 20, 12, 0, 0 and 7 out of 20 with exact percentages. Persisted result comparison remains T017 for the finalization service.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/t005-instructor-role-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0028",
+      "task_ids": [
+        "P03-02"
+      ],
+      "test_ids": [
+        "T005"
+      ],
+      "timestamp": "2026-09-28T23:54:25.253Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Dit.test=InstructorRoleEnforcementIT -Pmysql-it verify with private MySQL credential; real Tomcat/MySQL session and row checks",
+      "source_snapshot": "sha256-manifest:2a5a6997e210c716ee74dfa5de246e539c984847ec7bec1898f45802a30baad1",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_it; real Tomcat HTTP; Windows PowerShell",
+      "expected_result": "Every implemented instructor mutation denies student and anonymous calls without relying on hidden UI controls; denied calls leave persisted rows unchanged.",
+      "actual_result": "Maven BUILD SUCCESS; 14 unit/HTTP and 1 real-MySQL integration test passed without failures/errors/skips. InstructorRoleEnforcementIT exercised all seven instructor mutations as STUDENT (403) and anonymously (401) using valid CSRF and valid bodies, asserted MySQL exam/question/option rows unchanged after each, and checked both instructor reads. Results/events/recovery ownership remains T006 pending until those routes exist.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/t005-instructor-role-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0029",
+      "task_ids": [
+        "P05-03"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T23:55:38.350Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify with private local MySQL credential; inspect AttemptResumeIT owner/payload/restart cases",
+      "source_snapshot": "sha256-manifest:bd765a80d42ccd87dad9be711926eea9938709f64e22479aff063cfaf535c1e1",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_it; real Tomcat HTTP and fresh nonweb Spring context",
+      "expected_result": "Only the owning student can resume; response has original deadline, saved answer/revision and serverNow without answer keys; persisted state survives a fresh app context.",
+      "actual_result": "Maven BUILD SUCCESS; 14 unit/HTTP and 41 real-MySQL integration tests passed without failures, errors or skips. AttemptResumeIT (2) verified 401/403/404 owner boundaries, original startedAt/deadline, saved selectedOptionId/revision, bounded serverNow, recursive absence of key/password/studentId fields, and identical data in a fresh application context. T012 and T024 remain pending until result and mutation payloads are covered.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0029-p05-03-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0030",
+      "task_ids": [
+        "P05-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-28T23:59:59.495Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Dtest=ReadinessControllerTest -Dit.test=SaveDeadlineRollbackIT -Pmysql-it verify with private MySQL credential",
+      "source_snapshot": "sha256-manifest:50a009f3d114ec806371df0197831a690734ddc0c5f8c5feb9fd4e53d406a15a",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_it; separate JDBC connections and transactions",
+      "expected_result": "Before-deadline saves commit; exact/late saves fail; failed writes roll back without success; attempt-row lock prevents a blocked save from crossing an expired or terminal boundary.",
+      "actual_result": "Maven BUILD SUCCESS; 2 unit/HTTP and 4 real-MySQL integration cases passed without failures/errors/skips. SaveDeadlineRollbackIT checked deadline minus one microsecond, exact and later boundary, forced duplicate-revision failure after answer update with rollback/no 200, and separate-connection lock races across deadline and terminal write. T016 full finalization-service race remains pending.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p05-04-save-deadline-rollback-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0031",
+      "task_ids": [
+        "P07-02"
+      ],
+      "test_ids": [
+        "T015"
+      ],
+      "timestamp": "2026-09-29T00:04:17.052Z",
+      "command_or_procedure": "node --check exam.js/auth.js; .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -DskipTests package; run packaged app against isolated online_exam_e2e demo profile; python .local/check_exam_ui.py in headless Chromium",
+      "source_snapshot": "sha256-manifest:2c5f4d7ef7d9bafefde3432bc0ad4f16122f3e0fb35ad01d0693612eb2b6bf15",
+      "environment": "Java 21.0.12; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_e2e; Chromium 149; desktop 1440x900 and mobile 390x844",
+      "expected_result": "Exam player navigates questions, saves/clears through MySQL with server-confirmed revisions, resolves stale-tab conflicts, restores saved state after refresh, and preserves server deadline under client-clock tampering.",
+      "actual_result": "Package and JavaScript syntax checks passed. Live browser started a two-question exam, saved both answers, navigated, refreshed to confirmed choices, changed Date.now to 2050 then refocused/reloaded while the persisted deadline and answers remained unchanged, handled a deliberate stale revision from another API client, retried, cleared and reloaded at revision 4. Mobile had no horizontal overflow; no page errors. Submission/result controls remain P07-03.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p07-02-package.log",
+        "evidence/V0031-p07-02-browser.log",
+        "evidence/p07-02-exam-desktop.png",
+        "evidence/p07-02-exam-cleared.png",
+        "evidence/p07-02-exam-mobile.png"
+      ]
+    },
+    {
+      "id": "V0032",
+      "task_ids": [
+        "P06-02"
+      ],
+      "test_ids": [
+        "T017",
+        "T018",
+        "T019"
+      ],
+      "timestamp": "2026-09-29T00:07:35.011Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify; focused FinalizationIT command in evidence/p06-02-finalization-mysql-it.log",
+      "source_snapshot": "sha256-manifest:2bfd7cd395ab8404305abfbd276a929e820302b2d7cb06d7d75ca66c8695786b",
+      "environment": "Java 21.0.12.1, Spring Boot 3.5.16, Docker MySQL 8.4.11 online_exam_it, Windows PowerShell",
+      "expected_result": "Stored answers grade correctly; repeat submit is immutable; independent save/submit/expiry transactions serialize under the attempt-row lock; all Java/MySQL tests pass without skips.",
+      "actual_result": "14 unit/HTTP and 52 real-MySQL tests passed with zero failures/errors/skips. FinalizationIT passed seven cases covering five hand-calculated persisted scores, client score ignored, repeated submit, exact-deadline timeout, rollback, and independent-connection save/submit/timeout ordering.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/V0032-p06-02-mysql-it.log",
+        "evidence/p06-02-finalization-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0033",
+      "task_ids": [
+        "P06-03"
+      ],
+      "test_ids": [
+        "T016"
+      ],
+      "timestamp": "2026-09-29T00:16:02.468Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Dtest=ReadinessControllerTest -Dit.test=ExpiryRecoveryIT,ClosedBrowserExpiryIT -Pmysql-it verify; T016 combined with V0030 SaveDeadlineRollbackIT and V0032 FinalizationIT",
+      "source_snapshot": "sha256-manifest:1e6b3400bcc6a7a3032f604ec9811359c2c6ae8ff74c2a0688225ca897e55b09",
+      "environment": "Java 21.0.12.1, Spring Boot 3.5.16, Docker MySQL 8.4.11 online_exam_it, controlled Clock and independent JDBC transactions",
+      "expected_result": "Scheduled/startup/lazy expiry finalize via shared lock without extending deadlines; deadline boundaries and lock wait across deadline reject late saves and produce one valid terminal grade.",
+      "actual_result": "2 unit/HTTP and 5 real-MySQL expiry IT passed without failures/errors/skips. Prior V0030 save boundary/lock-wait and V0032 finalization exact-deadline cases plus new submit-waiting-on-save crossing deadline complete T016. Closed-client server expiry passed; browser-close T020 and live-plus-overdue restart T021 remain pending.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p06-03-expiry-recovery-mysql-it.log",
+        "evidence/p05-04-save-deadline-rollback-mysql-it.log",
+        "evidence/V0032-p06-02-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0034",
+      "task_ids": [
+        "P06-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-29T00:19:47.822Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify; focused -Dit.test=StudentSessionIT,StudentSessionExpiryIT,ResultQueryIT -Pmysql-it verify",
+      "source_snapshot": "sha256-manifest:11f39caeba41181dd7b40129ec436e0fd170e48aa144a375fc48c1bd5d1b4ebf",
+      "environment": "Java 21.0.12.1, Spring Boot 3.5.16, Docker MySQL 8.4.11 online_exam_it, Hikari maximumPoolSize=4 only in Maven test processes",
+      "expected_result": "Owner-scoped result/event APIs expose aggregate and sanitized metadata only; all Java/MySQL tests and nearby session regression pass without connection exhaustion.",
+      "actual_result": "Full gate 14 unit/HTTP plus 60 real-MySQL IT passed, zero failures/errors/skips. Focused result/session regression 14 unit/HTTP plus 7 real-MySQL IT passed. ResultQueryIT covered own/foreign/role/not-ready result, cross-owner roster/event access, safe DTOs and lazy overdue finalization. The original uncapped run failed four context startups on MySQL 1040; test-only pool cap fixed the original full gate and nearby session tests.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p06-04-result-query-mysql-it-pool4.log",
+        "evidence/p06-04-session-result-regression.log",
+        "evidence/p06-04-result-query-mysql-it.log"
+      ]
+    },
+    {
+      "id": "V0035",
+      "task_ids": [
+        "P07-03"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-29T00:30:13.814Z",
+      "command_or_procedure": "node --check src/main/resources/static/assets/{exam,student,instructor}.js; .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -DskipTests package; python .local/check_submission_result_ui.py against packaged demo app on isolated online_exam_e2e MySQL",
+      "source_snapshot": "sha256-manifest:5bd31844b11ef7a46eb309f614b602466b36b2f656114429a6575cdde1419be8",
+      "environment": "Java 21.0.12.1, Spring Boot 3.5.16, Docker MySQL 8.4.11 online_exam_e2e, headless Chromium desktop 1440x900 and mobile 390x844",
+      "expected_result": "Student submits only after acknowledged saves, sees server-persisted aggregate result across reload and student desk link; owner instructor reviews the result; no browser errors or mobile overflow.",
+      "actual_result": "JavaScript syntax and package build passed. Browser aborted an answer save and confirmed Submit disabled, retried to acknowledged save, submitted a 2-question exam, observed MySQL-backed 2/5 and 40.00%, reloaded with unchanged finalization, opened result from student desk, and saw the same score in instructor owner review. Desktop/mobile screenshots inspected; no page errors or horizontal overflow. T027 full browser journey remains pending separate complete UI-created fixture.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p07-03-package.log",
+        "evidence/p07-03-browser.log",
+        "evidence/p07-03-student-result-desktop.png",
+        "evidence/p07-03-student-result-mobile.png",
+        "evidence/p07-03-instructor-results.png"
+      ]
+    },
+    {
+      "id": "V0036",
+      "task_ids": [
+        "P07-04"
+      ],
+      "test_ids": [
+        "T028"
+      ],
+      "timestamp": "2026-09-29T00:40:28.907Z",
+      "command_or_procedure": "node --check on three frontend modules; .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -DskipTests package; python .local/check_keyboard_offline_ui.py against packaged demo app and isolated online_exam_e2e MySQL",
+      "source_snapshot": "sha256-manifest:250a166b858c5843fa54db1ceb071b54cb8f0d251ed892e6d73d81a8920fa41f",
+      "environment": "Headless Chromium desktop 1440x900 and mobile 360x780; Java 21.0.12.1, Spring Boot 3.5.16, Docker MySQL 8.4.11 online_exam_e2e",
+      "expected_result": "Keyboard-only navigation retains visible focus; 360px paper/result has no clipping; offline saves are clearly unsaved, block submit, survive refocus and can be retried after reconnect.",
+      "actual_result": "JavaScript syntax/package passed. Browser used keyboard to login, open exam, select radio, navigate questions, submit; focus remained on rerendered controls. At 360px no horizontal overflow; focus outline visible in screenshot. Offline save showed warning and Not saved, kept draft after focus, blocked submit, then reconnect/retry produced acknowledged MySQL save and 2/5 result. No page errors. T029 full pending-save and post-expiry procedure remains pending.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p07-04-package.log",
+        "evidence/p07-04-keyboard-offline-browser.log",
+        "evidence/p07-04-keyboard-exam-mobile.png",
+        "evidence/p07-04-offline-unsaved-mobile.png",
+        "evidence/p07-04-keyboard-result-mobile.png"
+      ]
+    },
+    {
+      "id": "V0037",
+      "task_ids": [
+        "P08-01"
+      ],
+      "test_ids": [
+        "T006",
+        "T023",
+        "T025"
+      ],
+      "timestamp": "2026-09-29T00:53:24.733Z",
+      "command_or_procedure": "Run the full Maven mysql-it profile and ordered expiry/recovery regression on real MySQL; run the packaged-app Chromium lost-cookie, denied-login, owner reset, scoped audit and resume journey; combine the earlier foreign owner mutation/results evidence for the complete T006 route sweep.",
+      "source_snapshot": "sha256-manifest:c187bbaadef38b451d165258e5a17a0e3a21d5d16ab461e92b6c9cbf84b3e5f4",
+      "environment": "Windows PowerShell; local JDK 21; Spring Boot 3.5.16; MySQL 8.4.11 isolated integration/e2e schemas; Playwright Chromium; test-only Hikari pool cap 4 and one-hour scheduled scan default.",
+      "expected_result": "All Java/MySQL tests pass with no skips; only the owning instructor can reset a current attempt; old session is rejected and the new session resumes the same answers, revision and deadline; denied-login/recovery events are scoped and sanitized; foreign instructor exam, result and recovery access is denied.",
+      "actual_result": "Full gate passed 14 unit/HTTP plus 63 real-MySQL integration tests with zero failures/errors/skips. Ordered regression passed 14 plus 21. Packaged Chromium journey passed lost-cookie 409, owner reset, scoped duplicate/recovery events and unchanged saved answer/deadline after re-login. Earlier foreign owner mutation and results checks passed. The earlier full failure was traced to a cached 100 ms fixed-clock test scheduler and corrected with test-only isolation.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p08-01-recovery-full-mysql-it.log",
+        "evidence/p08-01-recovery-full-mysql-it-passing.log",
+        "evidence/p08-01-recovery-ordered-regression.log",
+        "evidence/p08-01-recovery-browser-live.log",
+        "evidence/p08-01-recovery-before.png",
+        "evidence/p08-01-recovered-attempt.png",
+        "evidence/V0017-p04-01-mysql-it.log",
+        "evidence/p06-04-result-query-mysql-it-pool4.log"
+      ]
+    },
+    {
+      "id": "V0038",
+      "task_ids": [
+        "P08-02"
+      ],
+      "test_ids": [
+        "T030",
+        "T035"
+      ],
+      "timestamp": "2026-09-29T01:03:44.407Z",
+      "command_or_procedure": "Run Maven -Pmysql-it verify with ExamAuthoringIT, LoginThrottleIT, SessionRecoveryIT and SessionAndCsrfLifecycleIT; run tools/check_safe_text_ui.py against a packaged demo app and isolated MySQL e2e schema in Chromium; run tools/audit_secrets.py over repository text, evidence and runtime log; inspect screenshot and safe failed responses.",
+      "source_snapshot": "sha256-manifest:c7de1b892c5fafe6f3ccbbe089d851b9b5c5bc17bf01caeaa07fd67542a6b7de",
+      "environment": "Windows PowerShell; local JDK 21; Spring Boot 3.5.16; MySQL 8.4.11 integration/e2e schemas; packaged app on localhost; Playwright Chromium; generated credentials kept in ignored .env and .local files.",
+      "expected_result": "SQL-like login input cannot bypass authentication; HTML/script-like exam content persists and renders literally without execution; oversized credentials and numeric values are rejected safely; browser CSP is present; no generated local secrets, raw session/CSRF values or database details appear in responses, delivered repository text, evidence or runtime log.",
+      "actual_result": "Focused ExamAuthoringIT passed 7/7. Adjacent security regression passed 14 unit/HTTP plus 13 MySQL integration tests without failures/errors/skips. Live Chromium created/published an adversarial paper, saw literal text on instructor/student/player screens, no injected element or script execution, confirmed CSP and safe 401/400 responses. Secret audit passed 156 repository text files, 103 evidence files and live app log; inspected screenshot. Packaged app was stopped after the check.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p08-02-input-hardening-focused-passing.log",
+        "evidence/p08-02-security-regression.log",
+        "evidence/p08-02-safe-text-browser.log",
+        "evidence/p08-02-safe-text-student.png",
+        "evidence/p08-02-secret-audit.log"
+      ]
+    },
+    {
+      "id": "V0039",
+      "task_ids": [
+        "P08-04"
+      ],
+      "test_ids": [
+        "T020",
+        "T021",
+        "T026",
+        "T029",
+        "T035"
+      ],
+      "timestamp": "2026-09-29T01:16:03.639Z",
+      "command_or_procedure": "Run focused Maven -Pmysql-it resilience ITs and the full profile; run tools/check_resilience_browser.py against packaged app, Chromium and isolated MySQL e2e schema with pending/failed/offline/retry/post-expiry states and a browser-close scheduler timeout; run tools/check_restart_recovery.ps1 to prepare two saved attempts, stop the process, make one controlled overdue row, start a fresh packaged process and verify both; rerun tools/audit_secrets.py.",
+      "source_snapshot": "sha256-manifest:3c8d2aec9a002626ab4746a13ba4da786454eedfd2b9637092d971a81c255759",
+      "environment": "Windows PowerShell; local JDK 21; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_it and online_exam_e2e; Playwright Chromium; packaged app on localhost; generated secrets in ignored local environment files.",
+      "expected_result": "A failed save or finalization write returns no false success and leaves no partial state; retry persists correctly. A fresh process retains live saved answers/deadline and finalizes overdue answers. Pending/failed/offline saves block submit; post-expiry writes are rejected; a closed browser attempt finalizes without client callback. No generated secrets leak into evidence or app logs.",
+      "actual_result": "Focused gate passed 14 unit/HTTP plus 16 real-MySQL integration tests; full gate passed 14 plus 66 with zero failures/errors/skips. MySQL CHECK fault rejected the finalization UPDATE with HTTP 500 and unchanged IN_PROGRESS row; removing it allowed a 2/5 retry. A duplicate revision write failure rolled back the save, then retry persisted revision 2. Chromium proved pending/failed/offline/retry and post-expiry 0/2, while a closed browser attempt reached TIMED_OUT 2/2 via scheduler. An actual packaged process restart preserved the live saved attempt/deadline and finalized the overdue saved attempt. Secret audit passed 159 repository text files, 111 evidence files and 7 app logs. Initial trigger-based fault setup failed because MySQL binary logging requires SUPER; the supported temporary CHECK constraint passed without server setting changes. The app was stopped.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p08-04-resilience-focused.log",
+        "evidence/p08-04-resilience-focused-retry.log",
+        "evidence/p08-04-full-mysql-it.log",
+        "evidence/p08-04-resilience-browser.log",
+        "evidence/p08-04-unsaved-browser.png",
+        "evidence/p08-04-expired-browser.png",
+        "evidence/p08-04-process-restart.log",
+        "evidence/p08-04-secret-audit.log"
+      ]
+    },
+    {
+      "id": "V0040",
+      "task_ids": [
+        "P09-01"
+      ],
+      "test_ids": [
+        "T012",
+        "T024",
+        "T037"
+      ],
+      "timestamp": "2026-09-29T01:27:02.090Z",
+      "command_or_procedure": "Run focused StudentPrivacyIT and full .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify; install pinned npm dependencies with npm.cmd --prefix e2e ci, list configured Playwright cases, install matching Chromium and run npm.cmd --prefix e2e run test:e2e against isolated MySQL; inspect Maven XML/CLI and Playwright list/report with tools/check_test_selection.py; rerun secret audit.",
+      "source_snapshot": "sha256-manifest:30edd83700208d00653c21678781ce0a91abb0c3977eadecd256bf41b41a757e",
+      "environment": "Windows PowerShell; Java 21; Spring Boot 3.5.16; MySQL 8.4.11 online_exam_it/e2e; Node 24.13.1, npm 11.8.0, @playwright/test 1.63.0 and matching Chromium; generated credentials in ignored local files.",
+      "expected_result": "Every student HTML/API workflow payload before and after submission omits answer-key flags, password hashes and other-student data; Student B cannot read, mutate, submit or retrieve Student A's attempt/result; full Java/MySQL and configured browser suites select nonzero tests and run with no failures/errors/skips.",
+      "actual_result": "StudentPrivacyIT passed 2 real-MySQL cases covering catalog, start, list, resume, save, submit, result, current-user/CSRF payloads, four student HTML pages, instructor-route denial and cross-student read/save/submit/result denial with persisted answer unchanged. Full Maven gate passed 14 unit/HTTP plus 68 MySQL integration tests. Pinned Playwright smoke selected and passed 2/2 Chromium cases against packaged app and isolated MySQL; test-selection script checked XML/CLI reports and no skips. The first JS run selected both cases but lacked Chromium v1243; installing the matching browser resolved it. Secret audit passed 165 repository text files, 121 evidence files and 7 app logs. Packaged browser server stopped after the suite.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p09-01-privacy-focused.log",
+        "evidence/p09-01-full-mysql-it.log",
+        "evidence/p09-01-npm-lock.log",
+        "evidence/p09-01-npm-ci.log",
+        "evidence/p09-01-playwright-list.log",
+        "evidence/p09-01-playwright-smoke.log",
+        "evidence/p09-01-playwright-browser-install.log",
+        "evidence/p09-01-playwright-smoke-passing.log",
+        "evidence/p09-01-test-selection.log",
+        "evidence/p09-01-secret-audit.log"
+      ]
+    },
+    {
+      "id": "V0041",
+      "task_ids": [
+        "P09-02"
+      ],
+      "test_ids": [
+        "T027",
+        "T037",
+        "T039"
+      ],
+      "timestamp": "2026-09-29T01:41:27.352Z",
+      "command_or_procedure": "Build the packaged Java app; run npm.cmd --prefix e2e run test:e2e with pinned Playwright/Chromium against isolated online_exam_e2e MySQL, then list selected cases and inspect report counts with tools/check_test_selection.py. The JS journey creates/edits/publishes a paper in the instructor UI; student logs in, saves/clears/re-saves, navigates, refreshes, submits and reopens the persisted 2/5 result; instructor refreshes and reviews it. Exercise draft deletion and result retry. Review the UI action matrix, screenshots, console/network monitor and secret audit.",
+      "source_snapshot": "sha256-manifest:1240ddd6dea44969a9a427f567c6fe6ae067923f23ca59f51e27e053c44fdb7f",
+      "environment": "Windows PowerShell; packaged Spring Boot 3.5.16 on Java 21; MySQL 8.4.11 isolated e2e schema; Node 24.13.1, npm 11.8.0, @playwright/test 1.63.0 and Chromium v1243; credentials loaded from ignored local files.",
+      "expected_result": "The exact instructor-created UI paper completes the student save/refresh/submit journey, independently expected 2/5 score persists in MySQL and appears for the owner. All required screen controls have working effects, with no unhandled page, console or unexpected network/HTTP errors; all selected browser cases execute without skips.",
+      "actual_result": "Final JavaScript Playwright suite selected and passed 4/4 cases in 2 files; student paper was created and published entirely through the UI, saved with revisions, submitted for 2/5 and reopened from the student desk; owner review showed 2/5. Draft create/delete and failed-result retry passed. The monitored journey had no page exceptions, unexpected HTTP/network failures or console errors; deliberate 401/409 responses were handled. First browser run exposed a CSP-blocked remote font import; removing it fixed the console. A retry exposed an instructor initialization race; disabling Create until load and ignoring stale paper responses fixed it. Final screenshots were inspected, action matrix reconciled with earlier recovery/offline/keyboard evidence, test selection confirmed 14 Surefire plus 68 Failsafe plus 4 Playwright with no skips, and secret audit passed 166 repository text files, 136 evidence files and 7 app logs. Packaged server stopped.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p09-02-browser-journey-first.log",
+        "evidence/p09-02-browser-journey-retry.log",
+        "evidence/p09-02-browser-journey-passing.log",
+        "evidence/p09-02-result-retry-focused.log",
+        "evidence/p09-02-browser-full-final.log",
+        "evidence/p09-02-playwright-list.log",
+        "evidence/p09-02-test-selection.log",
+        "evidence/p09-02-secret-audit.log",
+        "evidence/p09-02-ui-action-matrix.md",
+        "evidence/p09-02-ui-published-paper.png",
+        "evidence/p09-02-ui-student-result.png",
+        "evidence/p09-02-ui-instructor-review.png"
+      ]
+    },
+    {
+      "id": "V0042",
+      "task_ids": [
+        "P09-03"
+      ],
+      "test_ids": [
+        "T033"
+      ],
+      "timestamp": "2026-09-29T01:46:28.689Z",
+      "command_or_procedure": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_ten_student_pilot.ps1",
+      "source_snapshot": "sha256-manifest:5173d304026e310f2d62afc90546fdb35ef5fc2327e09934631dc86a376c0b34",
+      "environment": "Java 21 packaged Spring Boot 3.5.16, local HTTP, MySQL 8.4.11 online_exam_e2e, ten distinct authenticated HTTP sessions",
+      "expected_result": "Ten students independently start, save, resume and submit; every acknowledged answer and calculated score matches MySQL and owner roster.",
+      "actual_result": "Ten sessions submitted ten independently scored attempts; 20 answer rows and revisions, deadlines and owner roster reconciled. Concurrent wall 0.98s, p95 0.33s; no application errors.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p09-03-ten-student-pilot.log",
+        "evidence/p09-03-pilot-conditions.md"
+      ]
+    },
+    {
+      "id": "V0043",
+      "task_ids": [
+        "P09-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-29T01:46:59.118Z",
+      "command_or_procedure": "Review all required test statuses and latest verification/evidence links, resolved blocker evidence, Maven/Playwright selection reports; run node tools/validate_trackers.mjs",
+      "source_snapshot": "sha256-manifest:f7dfeafc802b96ca2d6487e2f3f7dbc14c696238d272b29e72b1e70f36f0feab",
+      "environment": "Current source and authoritative JSON trackers after V0042",
+      "expected_result": "All P09 behavior/security checks have real executed evidence; remaining setup, backup, documentation and packaging checks are explicitly pending and no unresolved blocker is hidden.",
+      "actual_result": "36/40 required PASS with verification/evidence links valid; four NOT_RUN checks T001/T032/T034/T038 assigned to P10/P11; 14+68 Java/MySQL and four browser cases selected/executed with zero skips; both blockers resolved.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p09-04-coverage-review.md",
+        "evidence/p09-04-tracker-validation.log",
+        "evidence/p09-02-test-selection.log"
+      ]
+    },
+    {
+      "id": "V0044",
+      "task_ids": [
+        "P10-01"
+      ],
+      "test_ids": [
+        "T038"
+      ],
+      "timestamp": "2026-09-29T01:49:59.283Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 clean package; powershell -NoProfile -ExecutionPolicy Bypass -File tools/check_release_startup.ps1",
+      "source_snapshot": "sha256-manifest:0184e54d759bffd12c46c0ce10e6aebefbfd70eb8e2db636fc2dbb8d8d886f98",
+      "environment": "Windows PowerShell, Java 21, external DB_URL/DB_USER/DB_PASSWORD, normal profile, MySQL 8.4.11 online_exam",
+      "expected_result": "Executable JAR builds, starts using documented external configuration and database, reports readiness, serves login UI and protects current-user API.",
+      "actual_result": "Maven BUILD SUCCESS with 14 unit/HTTP tests, zero skips; Boot JAR normal-profile process gave ready 200, login 200 and anonymous /api/me 401. Initial smoke text assertion used old page name; corrected to Examroom and passing rerun. App stopped.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p10-01-release-build.log",
+        "evidence/p10-01-release-startup.log",
+        "evidence/p10-01-release-startup-passing.log"
+      ]
+    },
+    {
+      "id": "V0045",
+      "task_ids": [
+        "P10-02"
+      ],
+      "test_ids": [
+        "T001",
+        "T032"
+      ],
+      "timestamp": "2026-09-29T01:52:59.772Z",
+      "command_or_procedure": "python tools/rehearse_clean_setup_backup.py; python tools/audit_secrets.py",
+      "source_snapshot": "sha256-manifest:b51851894af85a615068af290d3bb3ce4b8405751c0a3b472209542b0c52a3e2",
+      "environment": "Fresh copied source without project-local secrets/artifacts; Java 21; Maven Wrapper with cached dependencies; new online_exam_clean_p10_* and online_exam_restore_p10_* schemas on MySQL 8.4.11 Docker",
+      "expected_result": "Fresh source builds and starts on an empty isolated MySQL schema using external configuration; separate backup restores all data without reset of normal database.",
+      "actual_result": "Fresh source built executable JAR with 14/14 unit/HTTP tests and zero skips; Flyway V1 migrated new schema with zero accounts, ready/login HTTP passed. 31,170-byte single-transaction e2e backup restored to another new schema; all nine table counts and deterministic ordered row dump hash matched. Normal database untouched; secret audit passed.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p10-02-clean-setup-backup.log",
+        "evidence/p10-02-clean-build.log",
+        "evidence/p10-02-secret-audit.log"
+      ]
+    },
+    {
+      "id": "V0046",
+      "task_ids": [
+        "P10-03"
+      ],
+      "test_ids": [
+        "T034"
+      ],
+      "timestamp": "2026-09-29T01:56:31.277Z",
+      "command_or_procedure": "python tools/check_documentation.py; npm.cmd --prefix e2e run test:e2e; cross-check clean build/startup and guide claims with V0044/V0045 evidence",
+      "source_snapshot": "sha256-manifest:fea7bb3d368bb622c55da5be62b243cee78e5a0307ace81248fd4c5ed8670d6e",
+      "environment": "Current source documentation; Java 21 packaged app; isolated online_exam_e2e MySQL; pinned Playwright/Chromium",
+      "expected_result": "API, ER/class architecture, OOP design, user/demo steps and proctoring limits match implemented routes and runnable commands; documented browser workflow completes.",
+      "actual_result": "All 13 release Markdown files and 11 local links resolved; six command contracts and listed API routes matched source. Documented Playwright command passed 4/4 browser cases including instructor-authored paper, student 2/5 result and owner review. Clean build, startup, migration and restore procedures passed V0044/V0045.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p10-03-doc-check.log",
+        "evidence/p10-03-doc-browser-runthrough.log",
+        "evidence/p10-02-clean-setup-backup.log",
+        "evidence/p10-01-release-startup-passing.log"
+      ]
+    },
+    {
+      "id": "V0047",
+      "task_ids": [
+        "P10-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-29T01:57:13.847Z",
+      "command_or_procedure": "Review deploy/runtime.env.example against application.yml, docs/DEPLOYMENT.md against local startup/backup evidence, run python tools/check_documentation.py, confirm deployment_status NOT_REQUESTED",
+      "source_snapshot": "sha256-manifest:aba0950ae0c32a6ec2c0c50dc6f0d805a1e45a844b08a1b30bf7ec91cfeeb4c4",
+      "environment": "Local release package and docs; no configured public hosting target",
+      "expected_result": "Runnable single-instance Java/MySQL hosting configuration and HTTPS/secrets/backups runbook are reviewable; actual public deployment remains conditional.",
+      "actual_result": "Runtime variable names match application.yml, hosting/backup/session limits are documented, local startup and restore evidence linked, 12 documentation links resolve; conditional deployment remains NOT_REQUESTED.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p10-04-hosting-review.md",
+        "evidence/p10-04-hosting-doc-check.log",
+        "evidence/p10-01-release-startup-passing.log",
+        "evidence/p10-02-clean-setup-backup.log"
+      ]
+    },
+    {
+      "id": "V0048",
+      "task_ids": [
+        "P11-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-29T02:00:11.410Z",
+      "command_or_procedure": "Review R01-R14 against source, test/evidence ledger and release docs; scan src/pom/e2e for stub or disabled-test markers; generate deterministic source manifest; run documentation and tracker validators; inspect git status",
+      "source_snapshot": "sha256-manifest:be9e6a784c3d08b0593187e28df56c85dfcd1a3ba7187faf902375ed5e846a10",
+      "environment": "Current 132-file release source snapshot; no .git repository in workspace",
+      "expected_result": "All required features map to real Java/MySQL/UI implementations and passing checks, no stub/security bypass or hidden incomplete core item; final source state recorded.",
+      "actual_result": "R01-R14 mapped to source and passing checks, no TODO/FIXME/UnsupportedOperationException/@Disabled/@Ignore/skipTests markers, 132-file manifest hash recorded; docs links and tracker structure passed. Git diff unavailable because workspace has no .git repository; source manifest used. Hosting remains conditional.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p11-01-scope-audit.md",
+        "evidence/p11-01-static-audit.log",
+        "evidence/p11-01-source-manifest.txt",
+        "evidence/p11-01-doc-check.log",
+        "evidence/p11-01-tracker-check.log"
+      ]
+    },
+    {
+      "id": "V0049",
+      "task_ids": [
+        "P11-02"
+      ],
+      "test_ids": [
+        "T027",
+        "T034",
+        "T035",
+        "T037",
+        "T039"
+      ],
+      "timestamp": "2026-09-29T02:02:59.956Z",
+      "command_or_procedure": ".\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it clean verify; npm.cmd --prefix e2e run test:e2e; npm.cmd --prefix e2e run test:e2e:list; python tools/check_test_selection.py --maven-log evidence/p11-02-final-maven-mysql.log --playwright-list evidence/p11-02-final-playwright-list.log --playwright-run evidence/p11-02-final-browser.log; python tools/check_documentation.py; python tools/audit_secrets.py; compare source manifests",
+      "source_snapshot": "sha256-manifest:50ce46a6b696cfe686f9c735354c5c91a8f7db388a602cc7797eca90756dbd5b",
+      "environment": "Release source manifest 8c6a080e... unchanged, Java 21, MySQL 8.4.11 online_exam_it/e2e, pinned Playwright 1.63.0/Chromium",
+      "expected_result": "Final source passes full Java unit/HTTP, real-MySQL integration and browser suites with nonzero selection and no failures/errors/skips; docs and secret checks pass; prior release/manual checks remain applicable.",
+      "actual_result": "Clean Maven verify BUILD SUCCESS: 14 Surefire and 68 Failsafe real-MySQL tests, zero failures/errors/skips. Chromium suite passed 4/4, test-selection audit confirmed all 86 selected/executed tests. Docs check passed 14 Markdown files/15 links, secret audit passed 180 repository files/160 evidence files/7 logs. 132-file source manifest unchanged. Earlier clean setup, backup/restore, pilot and resilience checks remain applicable to same app source.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p11-02-final-gates.md",
+        "evidence/p11-02-final-maven-mysql.log",
+        "evidence/p11-02-final-browser.log",
+        "evidence/p11-02-final-playwright-list.log",
+        "evidence/p11-02-final-test-selection.log",
+        "evidence/p11-02-final-doc-check.log",
+        "evidence/p11-02-final-secret-audit.log",
+        "evidence/p11-02-source-manifest.txt"
+      ]
+    },
+    {
+      "id": "V0050",
+      "task_ids": [
+        "P11-03"
+      ],
+      "test_ids": [
+        "T034"
+      ],
+      "timestamp": "2026-09-29T02:04:25.162Z",
+      "command_or_procedure": "Read docs/FINAL_REPORT.md and tracking/HANDOFF.md against V0042-V0049 evidence, exact README run commands and current deployment state; run python tools/check_documentation.py and node tools/validate_trackers.mjs",
+      "source_snapshot": "sha256-manifest:ded023d2058ce642f6604a4c30137694a397339f347851953e062739ced96176",
+      "environment": "Final local release source, all required checks PASS, no public host configured",
+      "expected_result": "Final report gives actual commands/results, local run URL, limitations and honest deployment state; handoff has exact resume/run action and evidence locations.",
+      "actual_result": "Report records 14+68+4 final tests, clean setup/restore, ten-student pilot, package startup, local URL, single-instance/proctoring/Flyway limits and NOT_REQUESTED deployment. Handoff names current trackers/evidence and next completion gate. Documentation check passed 15 Markdown files, 20 links, six commands and API routes; tracker structure valid.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p11-03-report-doc-check.log",
+        "evidence/p11-03-tracker-check.log",
+        "evidence/p11-02-final-gates.md"
+      ]
+    },
+    {
+      "id": "V0051",
+      "task_ids": [
+        "P11-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-29T02:05:48.411Z",
+      "command_or_procedure": "Audit authoritative task/test/blocker/verification links with node tools/validate_trackers.mjs and inspect remaining core/required/open blocker counts; record P11-04 then run strict completion gate",
+      "source_snapshot": "sha256-manifest:f6510f876161a458c652c0113b3463b96a10024201f209b603f607e5724213ed",
+      "environment": "Final V0049 source and V0050 report state; 47/48 core tasks verified before this update",
+      "expected_result": "P11-04 is the sole remaining core task; all 40 required tests PASS and blockers resolved; recording it permits strict post-update completion validation.",
+      "actual_result": "Preflight structural validator passed, P11-04 alone was TODO, all 40 required tests PASS, zero open blockers; recorder marks P11-04 VERIFIED. Strict completion gate follows as V0052.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p11-04-preflight.log",
+        "evidence/p11-04-completion-audit.md",
+        "evidence/p11-02-final-gates.md"
+      ]
+    },
+    {
+      "id": "V0052",
+      "task_ids": [
+        "P11-04"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-09-29T02:07:07.757Z",
+      "command_or_procedure": "After V0051 and setting implementation_status CORE_COMPLETE, run node tools/validate_trackers.mjs --require-complete; update final report/handoff, run python tools/check_documentation.py and python tools/audit_secrets.py",
+      "source_snapshot": "sha256-manifest:45b477c767eafdaca93b80db138ed8a1fb82a276e545f0bec4f3a49c05695b7d",
+      "environment": "Final release ledger, 48 core tasks, 40 required checks, deployment NOT_REQUESTED",
+      "expected_result": "Strict completion validator passes after tracker update, summaries agree, final docs resolve and no local secret leaks; conditional public deployment remains separate.",
+      "actual_result": "Strict completion gate returned structureValid true, 48/48 core VERIFIED, 40/40 required PASS, zero open blockers/errors. Final docs check passed 15 Markdown files/20 links/six commands/API routes; final secret audit passed 181 repository text files, 170 evidence files and seven logs. Public deployment remains NOT_REQUESTED.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/p11-04-completion-gate.log",
+        "evidence/p11-04-final-doc-check.log",
+        "evidence/p11-04-final-secret-audit.log",
+        "evidence/p11-04-completion-audit.md"
+      ]
+    },
+    {
+      "id": "V0053",
+      "task_ids": [
+        "LOCAL-01"
+      ],
+      "test_ids": [
+        "T037"
+      ],
+      "timestamp": "2026-10-09T17:27:26.725Z",
+      "command_or_procedure": "With JAVA_HOME set to the installed Java 21 JDK and MAVEN_USER_HOME=.local/wrapper: .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 clean package; privately load MYSQL_IT_PASSWORD from .env; .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 -Pmysql-it verify; npm.cmd --prefix e2e ci; npm.cmd --prefix e2e run install:chromium; npm.cmd --prefix e2e run test:e2e:list; npm.cmd --prefix e2e run test:e2e; python tools/check_test_selection.py --maven-log evidence/local-init-maven-mysql.log --playwright-list evidence/local-init-playwright-list.log --playwright-run evidence/local-init-playwright.log; run powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/start-local.ps1 -Port 8081 twice, then tools/stop-local.ps1, then tools/start-local.ps1 on 8080; run .local/verify-local-runtime.ps1; read-only MySQL schema/account counts via standard input; python tools/check_documentation.py; python tools/audit_secrets.py.",
+      "source_snapshot": "sha256-manifest:613835049c171ef9f9eb4751e3ca1da013550325e288139e4aa6ac65e6582391",
+      "environment": "Windows PowerShell 5.1; installed Temurin 21.0.12.1+1; pinned Maven Wrapper/Maven 3.9.16; Spring Boot 3.5.16; Docker MySQL 8.4.11 at loopback 3307 with online_exam development and isolated online_exam_it/online_exam_e2e schemas; Node 24.13.1/npm 11.8.0; Playwright 1.63.0 and Chromium 153.0.8010.12. Authorized sandbox escalations for Docker, downloads, Java sockets/processes and browser launch.",
+      "expected_result": "The local toolchain builds and executes all selected checks without skips, real MySQL persists demo accounts, safe repeated start/stop works, and the application remains ready on loopback 8080.",
+      "actual_result": "PASS: 14 unit/HTTP, 68 real-MySQL and four Chromium cases executed with zero failures/errors/skips; suite selection reconciled. Launcher start/repeat/stop and final start passed. Student/instructor login/logout, CSRF rejection, anonymous denial, session fixation protection and JDBC MySQL/InnoDB/UTC checks passed. Development schema Flyway V1 applied, two instructors, three students, zero exams/attempts. App PID 32976 remains ready at http://127.0.0.1:8080/ with healthy MySQL on 3307. Initial read-only SQL diagnostic failures were repaired and retained separately; no application failure was observed. Core source and existing private configuration preserved. Documentation and sanitized evidence secret audit passed.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/local-init-maven-build.log",
+        "evidence/local-init-maven-mysql.log",
+        "evidence/local-init-npm.log",
+        "evidence/local-init-chromium.log",
+        "evidence/local-init-playwright-list.log",
+        "evidence/local-init-playwright.log",
+        "evidence/local-init-test-selection.log",
+        "evidence/local-init-launcher-parse.log",
+        "evidence/local-init-launcher-check.log",
+        "evidence/local-init-launcher-repeat.log",
+        "evidence/local-init-stop-check.log",
+        "evidence/local-init-final-ready.log",
+        "evidence/local-init-runtime-smoke.log",
+        "evidence/local-init-compose.json",
+        "evidence/local-init-development-db.log",
+        "evidence/local-init-source-manifest.txt",
+        "evidence/local-init-documentation.log",
+        "evidence/local-init-secret-audit.log"
+      ]
+    },
+    {
+      "id": "V0054",
+      "task_ids": [
+        "LOCAL-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-10-09T17:29:21.841Z",
+      "command_or_procedure": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/stop-local.ps1; powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/start-local.ps1 -Build; repeat tools/start-local.ps1; run .local/verify-local-runtime.ps1; node tools/validate_trackers.mjs --require-complete; python tools/check_documentation.py; python tools/audit_secrets.py.",
+      "source_snapshot": "sha256-manifest:4c66a6ad2d09a9ad440fbf0438ee23ca9a29729371e0e36cf35a941a5d0a9870",
+      "environment": "Initialized Windows workstation; Java 21, pinned Maven 3.9.16/Spring Boot 3.5.16, loopback MySQL 8.4.11 on 3307, explicit demo profile on loopback 8080; private configuration retained. Prior V0053 records 14 unit/HTTP, 68 MySQL and four Chromium checks.",
+      "expected_result": "The documented rebuild command handles native warnings without hiding Maven failures, builds successfully, leaves the app ready with both demo roles usable, and final tracker/documentation/secret gates pass.",
+      "actual_result": "PASS: -Build produced the executable JAR with 14 tests and zero failures/errors/skips; start/repeat reused the final PID 51480 at http://127.0.0.1:8080/. Student/instructor authentication, CSRF and read-only JDBC smoke passed. Strict ledger gate, documentation and secret audit passed; 48 core tasks and all 40 required checks complete, no unresolved blockers. Local database and Java app intentionally left running.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/local-init-rebuild-launch.log",
+        "evidence/local-init-final-stop.log",
+        "evidence/local-init-final-ready.log",
+        "evidence/local-init-runtime-smoke.log",
+        "evidence/local-init-completion-gate.log",
+        "evidence/local-init-documentation.log",
+        "evidence/local-init-secret-audit.log"
+      ]
+    },
+    {
+      "id": "V0055",
+      "task_ids": [
+        "UI-01"
+      ],
+      "test_ids": [
+        "T027",
+        "T028",
+        "T029",
+        "T030",
+        "T034",
+        "T035",
+        "T039"
+      ],
+      "timestamp": "2026-10-09T18:03:51.139Z",
+      "command_or_procedure": "Read the implementation plan/current trackers and git status; capture before screenshots; node --check the four modified JavaScript modules; .\\mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 package with Java 21 and DEBUG=false; npm.cmd --prefix e2e run test:e2e; npm.cmd --prefix e2e run test:e2e:list; python tools/run_dashboard_checks.py; visually inspect published-paper/result/login/mobile-student screenshots; python tools/check_documentation.py; python tools/audit_secrets.py; powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/start-local.ps1; GET /api/ready and compare live CSS/five HTML resources to final source bytes.",
+      "source_snapshot": "sha256-manifest:8a3a0eb17ea99dd66c4d8fac6507502131abb6825876159314783d8a5cba2dd9",
+      "environment": "Windows/PowerShell; Temurin Java 21.0.12.1+1, Maven Wrapper/Maven 3.9.16, Spring Boot 3.5.16, MySQL 8.4.11 loopback 3307; Playwright 1.63.0 pinned Node suite and native Python checks using installed project Chromium 153.0.8010.12. Browser fixtures exclusively online_exam_e2e; final runtime uses persistent online_exam and explicit demo profile on loopback 8080.",
+      "expected_result": "Conventional dashboards replace decorative layouts; all selected frontend and UI security/recovery checks pass, mobile content remains visible, and the final local runtime serves the verified pages without changing persistent user data.",
+      "actual_result": "PASS: 14 Java tests and all four existing browser cases executed with zero failures/errors/skips. Keyboard-only login/navigation/save/submit, focus, offline failure/retry, pending-save submit blocking, post-expiry rejection, closed-browser timeout, malicious literal text/SQL-like input and CSP passed on real MySQL. 16 desktop/mobile views passed clipping/control-ID/page-error checks; inspected restrained dashboard visuals. Original failed HTTP/CSRF startup check passed through the repaired direct Java runner, which also cleaned up its process. Documentation and secret audit passed. Final runtime is ready on loopback 8080 and serves redesigned HTML/CSS exactly. B003 closure and UI-01 verification follow.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/dashboard-build.log",
+        "evidence/dashboard-browser.log",
+        "evidence/dashboard-browser-list.log",
+        "evidence/dashboard-static-checks.log",
+        "evidence/dashboard-responsive-security.log",
+        "evidence/dashboard-live-resources.log",
+        "evidence/dashboard-documentation.log",
+        "evidence/dashboard-secret-audit.log",
+        "evidence/dashboard-source-manifest.txt",
+        "evidence/dashboard-local-start.log",
+        "evidence/dashboard-journey-published-paper.png",
+        "evidence/dashboard-journey-student-result.png",
+        "evidence/dashboard-login-1440.png",
+        "evidence/dashboard-student-1440.png",
+        "evidence/dashboard-student-360.png",
+        "evidence/dashboard-instructor-form-360.png",
+        "evidence/dashboard-keyboard-keyboard-exam-mobile.png",
+        "evidence/dashboard-resilience-expired-browser.png"
+      ]
+    },
+    {
+      "id": "V0056",
+      "task_ids": [
+        "UI-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-10-09T18:04:54.767Z",
+      "command_or_procedure": "After V0055 and evidence-backed B003 resolution: node tools/validate_trackers.mjs --require-complete; python tools/check_documentation.py; python tools/audit_secrets.py; inspect current runtime and user/demo guide labels.",
+      "source_snapshot": "sha256-manifest:a1a1408eb5300ebc4987291cd0088f519b43e4db51e3a5741a63d4adc96b1478",
+      "environment": "Windows/PowerShell; Temurin Java 21.0.12.1+1, Maven Wrapper/Maven 3.9.16, Spring Boot 3.5.16, MySQL 8.4.11 loopback 3307; Playwright 1.63.0 pinned Node suite and native Python checks using installed project Chromium 153.0.8010.12. Browser fixtures exclusively online_exam_e2e; final runtime uses persistent online_exam and explicit demo profile on loopback 8080.",
+      "expected_result": "Core release remains complete, all 40 required acceptance checks are PASS, no blocker is unresolved, UI-01 can be marked VERIFIED, and current handoff accurately describes the running redesigned app.",
+      "actual_result": "PASS: strict tracker gate reports 48/48 core VERIFIED, 40/40 required PASS, zero open blockers/errors; documentation and secret audits pass. B003 resolution links V0055 original-check/regression evidence. All dashboard pages are served by the running packaged app on loopback 8080. UI-01 is complete and local data is preserved.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/dashboard-completion-gate.log",
+        "evidence/dashboard-documentation.log",
+        "evidence/dashboard-secret-audit.log",
+        "evidence/dashboard-live-resources.log",
+        "evidence/dashboard-responsive-security.log"
+      ]
+    },
+    {
+      "id": "V0057",
+      "task_ids": [
+        "TUNNEL-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-10-09T19:39:46.425Z",
+      "command_or_procedure": "Check ngrok version/config/help and local readiness; record approval rejection and explicit user authorization; Start-Process ngrok http http://127.0.0.1:8080 --inspect=false with private logs and hidden window; poll local ngrok API; request public HTTPS readiness, login HTML, CSS and protected APIs. Final checks: node tools/validate_trackers.mjs --require-complete; python tools/check_documentation.py; python tools/audit_secrets.py.",
+      "source_snapshot": "sha256-manifest:9aa738dcca1c55d08f3e2ba3bb6a1c09312eb47064a50b357fb52d7dd037e1b5",
+      "environment": "Windows/PowerShell; ngrok 3.39.11 with existing private configuration, app PID 36268 on loopback 8080 using persistent online_exam and MySQL on 3307. User specifically authorized data exposure through ngrok.",
+      "expected_result": "A real HTTPS tunnel is running to the existing app, serves current dashboard resources and database readiness, and protected exam/result APIs reject anonymous requests.",
+      "actual_result": "PASS: ngrok PID 24044 forwards https://graveness-undrafted-harsh.ngrok-free.dev to loopback 8080 with request inspection disabled. Public readiness is UP; login and exact source CSS return 200. Anonymous identity, student exams, instructor exams and instructor results return 401. App/database settings and stored records were preserved. Original rejected startup succeeded after explicit user authorization. Final tracker/documentation/secret checks passed; zero open blockers.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/ngrok-authorization.md",
+        "evidence/ngrok-development-data-counts.log",
+        "evidence/ngrok-public-access-check.json",
+        "evidence/ngrok-public-smoke.json",
+        "evidence/ngrok-completion-gate.log",
+        "evidence/ngrok-documentation.log",
+        "evidence/ngrok-secret-audit.log"
+      ]
+    },
+    {
+      "id": "V0058",
+      "task_ids": [
+        "EXAM-UIUX-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-10-09T19:59:52.534Z",
+      "command_or_procedure": "python .local/create-uiux-test.py: authenticated CSRF-protected create/question/publish operations with complete instructor readback comparison; Java 21 read-only UiuxPersistenceProbe with real MySQL; python .local/verify-uiux-browser.py after explicit credential-transmission authorization; inspect schedule and student catalog screenshots. Final checks: node tools/validate_trackers.mjs --require-complete; python tools/check_documentation.py; python tools/audit_secrets.py.",
+      "source_snapshot": "sha256-manifest:978a300725399a408d271223fd3b01c852841d534ff2d19565cdc26f738118df",
+      "environment": "Existing Windows local app and persistent online_exam MySQL schema; Java 21/JDBC/MySQL 8.4.11, ngrok 3.39.11 and installed Chromium/Playwright. Browser timezone Asia/Calcutta; private account credentials supplied only in memory. App source and policies unchanged.",
+      "expected_result": "Publish a real 30-question UI/UX test with four options and one correct choice each, 30 marks, 10 minutes and the exact 10 October 2026 01:30-01:40 IST window, then verify persistence and both role UIs without consuming a student attempt.",
+      "actual_result": "PASS: exam ID 3 PUBLISHED under demo_instructor1. Complete instructor readback matches all 30 questions/options/keys; direct MySQL confirms 120 options, one correct option each, 30 marks, duration 10 and exact UTC 2026-10-09 20:00-20:10. Public instructor UI shows correct immutable schedule and 30 questions; student catalog shows correct counts and Upcoming before opening, with no answer keys. Zero browser page errors and no student test attempt created. Both verification sessions logged out; other user data and source preserved. Initial public credential-transmission rejection resolved by specific user authorization and successful original check. Final structural, documentation and secret gates passed with no open blockers; unchanged core test evidence retained.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/uiux-test-summary.json",
+        "evidence/uiux-test-mysql.log",
+        "evidence/uiux-test-browser.json",
+        "evidence/uiux-test-instructor-schedule.png",
+        "evidence/uiux-test-student-catalog.png",
+        "evidence/uiux-test-authorization.md",
+        "evidence/uiux-test-completion-gate.log",
+        "evidence/uiux-test-secret-audit.log",
+        "evidence/uiux-test-documentation.log"
+      ]
+    },
+    {
+      "id": "V0059",
+      "task_ids": [
+        "STUDENTS-01"
+      ],
+      "test_ids": [
+        "T034",
+        "T035"
+      ],
+      "timestamp": "2026-10-09T20:13:26.477Z",
+      "command_or_procedure": "Read the supplied image and store a private 15-row TSV; run Java 21 tools/SeedStudentRoster.java against persistent MySQL; repeat import; check an intentional existing-name conflict returns exit 1; recheck original roster; python .local/verify-student-roster.py for all 15 local API logins and numeric browser login/catalog access; python tools/check_documentation.py; python tools/audit_secrets.py including eight-digit roster credentials.",
+      "source_snapshot": "sha256-manifest:2ba5d2d67bcebe2096f80ca88a37bdb142efc214217f0e78419a402429d5ab3b",
+      "environment": "Existing local Windows Java 21 application, MySQL 8.4.11 online_exam on loopback 3307; Spring Security crypto 6.5.11 and Spring JCL 6.2.19 from pinned local Maven cache. Local Chromium login checks use no public credential transmission.",
+      "expected_result": "All 15 supplied students persist with exact names, enabled STUDENT role and roll-number username/password encoded using the application encoder; duplicates are retained, conflicts cannot reset accounts, authentication works, and credentials stay out of served files/evidence.",
+      "actual_result": "PASS: 15 new enabled students created atomically; repeat created zero and retained all 15 exact name/role/bcrypt matches. Intentional existing-name conflict rejected with expected exit 1, then all 15 original accounts still matched. All 15 local API sign-ins and a numeric browser login/catalog check passed with zero page errors. Verification sessions logged out and no attempts were started. Fresh documentation and secret checks passed, including private eight-digit roster credentials. App/security/session/timing source unchanged; app was not restarted.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/student-roster-import.log",
+        "evidence/student-roster-repeat.log",
+        "evidence/student-roster-conflict-check.log",
+        "evidence/student-roster-after-conflict.log",
+        "evidence/student-roster-summary.json",
+        "evidence/student-roster-documentation.log",
+        "evidence/student-roster-secret-audit.log"
+      ]
+    },
+    {
+      "id": "V0060",
+      "task_ids": [
+        "EXAM-UIUX-02"
+      ],
+      "test_ids": [
+        "T034",
+        "T035"
+      ],
+      "timestamp": "2026-10-09T20:21:52.463Z",
+      "command_or_procedure": "Run Java 21 .local/ExtendUiuxWindow.java against persistent MySQL using private environment credentials; validate identity/ownership/state, hold exam and existing attempt locks, update closing/instructions and insert the schedule audit event, verify paper/attempt/answer snapshots. Authenticated local instructor full-paper readback; python .local/verify-uiux-extension-browser.py for schedule/counts/student availability; scoped result/active roster counts; documentation and secret checks. Final node tools/validate_trackers.mjs --require-complete.",
+      "source_snapshot": "sha256-manifest:434ce5a5842dd9a08543d72eb9ee9c751b2c4ee85c702eb442e5c3bc06694873",
+      "environment": "Existing single-instance Java 21 application and MySQL 8.4.11 online_exam on loopback 3307; unchanged server timing/one-attempt policies. Chromium/Playwright with Asia/Calcutta timezone; verification credentials sent only to loopback. Explicit user request authorizes this one published schedule amendment.",
+      "expected_result": "The same published UI/UX test closes on 10 October 2026 at 02:00 IST, keeps its 01:30 opening and 10-minute duration, preserves paper/answers/attempt deadlines/results, and appears OPEN with correct timing in the student catalog.",
+      "actual_result": "PASS: exam 3 closes_at is 2026-10-09T20:30:00Z; duration remains 10 minutes and opening/publication time remain unchanged. Updated matching instructions and persisted EXAM_WINDOW_EXTENDED. All 30 questions, 120 options, keys/marks, attempt deadlines, answers and results were preserved. Full instructor readback and both local role UIs passed; student catalog was OPEN, no answer keys/page errors/verification attempts. Two existing terminal results remained finalized; zero active attempts observed at the scoped check. Documentation/secret checks passed. Final strict ledger gate passed with zero open blockers/errors; 48 core and 40 required checks retain verified completion.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/uiux-extension-mysql.log",
+        "evidence/uiux-extension-summary.json",
+        "evidence/uiux-extension-browser.json",
+        "evidence/uiux-extension-attempt-counts.json",
+        "evidence/uiux-extension-instructor-schedule.png",
+        "evidence/uiux-extension-student-catalog.png",
+        "evidence/uiux-extension-documentation.log",
+        "evidence/uiux-extension-secret-audit.log",
+        "evidence/uiux-extension-completion-gate.log"
+      ]
+    },
+    {
+      "id": "V0061",
+      "task_ids": [
+        "CODE-01"
+      ],
+      "test_ids": [],
+      "timestamp": "2026-10-09T20:46:21.545Z",
+      "command_or_procedure": "mvnw.cmd -B -ntp -Dmaven.repo.local=.local/m2 package",
+      "source_snapshot": "sha256-manifest:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "environment": "Windows; Java 21; Maven 3.9.16; real MySQL 8.4.11",
+      "expected_result": "Package succeeds without changing development data.",
+      "actual_result": "14 Java checks passed; repackage failed because the running application locks the target JAR. B006 recorded; zero active attempts and read-only snapshot obtained, then the launcher-owned app was stopped.",
+      "outcome": "FAIL",
+      "exit_code": 1,
+      "evidence_paths": [
+        "evidence/refactor-package.log",
+        "evidence/refactor-data-before.json"
+      ]
+    },
+    {
+      "id": "V0062",
+      "task_ids": [
+        "CODE-01"
+      ],
+      "test_ids": [
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T009",
+        "T010",
+        "T011",
+        "T012",
+        "T013",
+        "T014",
+        "T015",
+        "T016",
+        "T017",
+        "T018",
+        "T019",
+        "T020",
+        "T021",
+        "T024",
+        "T027",
+        "T028",
+        "T029",
+        "T030",
+        "T034",
+        "T035",
+        "T037",
+        "T038",
+        "T039",
+        "T001",
+        "T002",
+        "T032"
+      ],
+      "timestamp": "2026-10-09T21:12:23.683Z",
+      "command_or_procedure": "Maven package retry; final -Pmysql-it verify; Playwright list and four browser tests on E2E_PORT=8081; direct dashboard checks; actual process restart; fresh-source setup/backup-restore on E2E_PORT=8082; negative schema/port guards; live source-byte, permission, schedule and data-hash checks; existing public tunnel GET checks without credentials.",
+      "source_snapshot": "sha256-manifest:f68a78f3ed4d835b052f5d835d0850c049b5dc25215e9c29057527ceb166010b",
+      "environment": "Windows PowerShell; Java 21.0.12; Maven 3.9.16; Spring Boot 3.5.16; MySQL 8.4.11; Node 24.13.1; Playwright 1.63.0 Chromium; isolated online_exam_it/online_exam_e2e and new clean/restore schemas.",
+      "expected_result": "Simpler source and fewer repeated queries with preserved timing, permissions, server grading, first-session login, live student/exam data and working local/public runtime.",
+      "actual_result": "PASS: 32 source/document files simplified, one option query per paper, aggregate catalog counts and scoped single-exam totals. Final checks: 14 unit/HTTP, 69 MySQL, four browser cases, keyboard/offline/safe-text/expiry, 16 layouts, restart recovery, clean source/schema and identical backup restore, four negative runner guards. Zero unit/MySQL/browser failures/errors/skips. All eight live application tables match their before hashes. Updated app PID 33752 is ready, served assets match source, both local roles log in/out, UI/UX retains 30 four-option MCQs, 10-minute duration and 2 AM IST closing, no live test attempt created. B006 original packaging failure and nearby regressions passed; protected anonymous tunnel access returns 401.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/refactor-before-manifest.json",
+        "evidence/refactor-changes.json",
+        "evidence/refactor-review.diff",
+        "evidence/refactor-format-check.json",
+        "evidence/refactor-package-retry.log",
+        "evidence/refactor-final-mysql.log",
+        "evidence/refactor-final-browser-list.log",
+        "evidence/refactor-final-browser.log",
+        "evidence/refactor-final-dashboard.log",
+        "evidence/refactor-final-restart.log",
+        "evidence/refactor-final-clean-setup.log",
+        "evidence/refactor-final-clean-build.log",
+        "evidence/refactor-runner-guards.json",
+        "evidence/refactor-data-before.json",
+        "evidence/refactor-data-after.json",
+        "evidence/refactor-final-data-check.log",
+        "evidence/refactor-final-live-smoke.json",
+        "evidence/refactor-final-local-start.log",
+        "evidence/refactor-tunnel-smoke.json",
+        "evidence/refactor-final-keyboard-keyboard-exam-mobile.png",
+        "evidence/refactor-final-keyboard-keyboard-result-mobile.png",
+        "evidence/refactor-final-keyboard-offline-unsaved-mobile.png",
+        "evidence/refactor-final-layouts-instructor-1440.png",
+        "evidence/refactor-final-layouts-instructor-360.png",
+        "evidence/refactor-final-layouts-instructor-account-1440.png",
+        "evidence/refactor-final-layouts-instructor-account-360.png",
+        "evidence/refactor-final-layouts-instructor-exam-1440.png",
+        "evidence/refactor-final-layouts-instructor-exam-360.png",
+        "evidence/refactor-final-layouts-instructor-form-1440.png",
+        "evidence/refactor-final-layouts-instructor-form-360.png",
+        "evidence/refactor-final-layouts-login-1440.png",
+        "evidence/refactor-final-layouts-login-360.png",
+        "evidence/refactor-final-layouts-result-1440.png",
+        "evidence/refactor-final-layouts-result-360.png",
+        "evidence/refactor-final-layouts-student-1440.png",
+        "evidence/refactor-final-layouts-student-360.png",
+        "evidence/refactor-final-layouts-student-account-1440.png",
+        "evidence/refactor-final-layouts-student-account-360.png",
+        "evidence/refactor-final-resilience-expired-browser.png",
+        "evidence/refactor-final-resilience-unsaved-browser.png",
+        "evidence/refactor-final-safe-text-safe-text-student.png",
+        "evidence/refactor-final-ui-instructor-review.png",
+        "evidence/refactor-final-ui-published-paper.png",
+        "evidence/refactor-final-ui-student-result.png"
+      ]
+    },
+    {
+      "id": "V0063",
+      "task_ids": [
+        "CODE-01"
+      ],
+      "test_ids": [
+        "T034",
+        "T035",
+        "T037"
+      ],
+      "timestamp": "2026-10-09T21:15:00.844Z",
+      "command_or_procedure": "Final documentation/command-link check; executed-suite audit of final Maven and Playwright reports; source manifest; secrets audit; read-only dev-table comparison; credential-free final ngrok readiness/source/protected-access check; strict completion ledger validation.",
+      "source_snapshot": "sha256-manifest:f68a78f3ed4d835b052f5d835d0850c049b5dc25215e9c29057527ceb166010b",
+      "environment": "Same final Java 21/MySQL/Chromium source as V0062; loopback dev app PID 33752; authorized existing ngrok tunnel; trackers retain all prior history.",
+      "expected_result": "Current source is documented and tested, live data is preserved, audit logs contain no secrets, all required acceptance checks are PASS and there are no unresolved blockers.",
+      "actual_result": "PASS: 16 release Markdown files/22 local links/six command contracts resolve; suite selection confirms 14 Java, 69 MySQL and four browser cases, zero failures/errors/skips; source manifest saved; secrets audit passed; all eight live tables still match baseline after local role checks; final ngrok app is ready with matching source and returns 401 to anonymous protected access, no credentials sent. V0062 completion gate validates 48/48 core tasks and 40/40 required checks, zero errors/open blockers. HANDOFF and WORKLOG updated.",
+      "outcome": "PASS",
+      "exit_code": 0,
+      "evidence_paths": [
+        "evidence/refactor-completion-gate.log",
+        "evidence/refactor-final-docs.log",
+        "evidence/refactor-final-test-selection.log",
+        "evidence/refactor-final-secrets.log",
+        "evidence/refactor-final-source-manifest.txt",
+        "evidence/refactor-final-data-check.log",
+        "evidence/refactor-data-before.json",
+        "evidence/refactor-data-after.json",
+        "evidence/refactor-final-live-smoke.json",
+        "evidence/refactor-final-tunnel-smoke.json"
+      ]
+    }
+  ]
+}

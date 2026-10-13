@@ -1,5 +1,10 @@
 # Implementation handoff
 
+## New-device README update, 2026-10-13
+
+- `README.md` now starts with a fresh Windows setup walkthrough and also gives manual Windows and Bash startup steps. It explains which private files and MySQL data are absent from a clone and how the local launcher generates a demo password. The README-specific checks passed; see `evidence/readme-new-device-setup-2026-10-13.md`. No app/database/tunnel state was changed by this edit.
+- The broader `tools/check_documentation.py` currently fails because root `START_HERE.md` and other root documents appear to have moved into `docs/` during this task. Those unrelated workspace changes were preserved; reconcile the documentation checker after the moves settle. The prior verified application checks are untouched.
+
 ## Code simplification, 2026-10-10
 
 - `CODE-01` is VERIFIED in V0062, with final ledger/audit closure in V0063. Reviewed runtime Java, frontend, configuration and verification tools; simplified 32 source/document files. Private names are shorter, repeated unsaved checks are shared, fixed exam controls are in HTML, and compressed HTML/CSS is readable. See [code review](../docs/CODE_REVIEW.md) and [review diff](../evidence/refactor-review.diff).

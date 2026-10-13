@@ -168,3 +168,13 @@ Append concise records. Do not replace history or log secrets.
 - CODE-01 verified (V0062): final 14 Java/69 MySQL/four browser checks all passed with zero failures/errors/skips; native keyboard/offline/safe-text/expiry, 16 responsive views, actual restart and fresh build/schema/backup restore passed. Source review and format checks saved. B006 original package retry and regressions passed; all eight live tables match baseline. Verified package is running as PID 33752; the existing authorized ngrok tunnel serves current source and denies anonymous protected access. No live attempt was started. Final ledger, docs, selection and secrets checks follow in V0063.
 
 - CODE-01 closure (V0063): final docs/command links, actual suite-selection audit, source manifest, secrets scan, post-login data comparison and credential-free tunnel checks passed. All 48 core tasks and all 40 required checks are complete; B006 is resolved and no blocker remains. App PID 33752 and ngrok remain available. No further refactor work is pending.
+
+## 2026-10-13 - New-device README instructions
+
+- Added a fresh Windows setup path to `README.md`: repository copy, Java 21/Docker prerequisites, private `.env`, guarded launcher, generated demo password, readiness, stop/restart and data-transfer caveat. Added manual Windows and Bash steps for other devices. Scoped links, script syntax, command references, private `.env` read and README diff checks passed; evidence is `evidence/readme-new-device-setup-2026-10-13.md`. This was a documentation change; no app, database or tunnel operation ran.
+- During verification, Git showed unrelated root documents moving under `docs/`. The repository-wide documentation checker could not find the old root `START_HERE.md`; these file moves were preserved. Resolve the document relocation separately before relying on that broader check.
+
+## 2026-10-13 - New-device README instructions
+
+- Added a fresh Windows setup path to `README.md`: repository copy, Java 21/Docker prerequisites, private `.env`, guarded launcher, generated demo password, readiness, stop/restart and data-transfer caveat. Added manual Windows and Bash steps for other devices. Scoped links, script syntax, command references, private `.env` read and README diff checks passed; evidence is `evidence/readme-new-device-setup-2026-10-13.md`. This was a documentation change; no app, database or tunnel operation ran.
+- During verification, Git showed unrelated root documents moving under `docs/`. The repository-wide documentation checker could not find the old root `START_HERE.md`; these file moves were preserved. Resolve the document relocation separately before relying on that broader check.
